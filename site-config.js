@@ -1,8 +1,10 @@
 window.MIRACLE_CONFIG = {
-  revision: "initial-2026-08-11",
-  startingCount: null,
-  videoFiles: ["assets/ads/ad-01.mp4"],
-  skipDelaySeconds: 30,
-  effectType: "hearts",
-  effectIntensity: 2
+  "revision": "2026-08-11T12:49:50.585Z",
+  "startingCount": null,
+  "videoFiles": [
+    "assets/ads/ad-01.mp4"
+  ],
+  "skipDelaySeconds": 30,
+  "effectType": "pixels",
+  "effectIntensity": 3
 };
