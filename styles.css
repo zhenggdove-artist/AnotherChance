@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "Noto Serif TC Local";
+  src: url("assets/fonts/NotoSerifTC-VariableFont_wght.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Saint Local";
+  src: url("assets/fonts/saint.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   --black: #050505;
@@ -9,7 +25,12 @@
   --danger: #ff453a;
   --safe-top: max(18px, env(safe-area-inset-top));
   --safe-bottom: max(14px, env(safe-area-inset-bottom));
-  font-family: "Arial Narrow", "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+  --site-font: "Noto Serif TC Local", "Noto Serif TC", "Microsoft JhengHei", serif;
+  font-family: var(--site-font);
+}
+
+html[data-language="en"] {
+  --site-font: "Saint Local", "Noto Serif TC Local", "Times New Roman", serif;
 }
 
 * {
@@ -117,7 +138,7 @@ button {
   left: var(--x, 50%);
   bottom: var(--start-bottom, -12%);
   color: var(--particle-color, #ff4d73);
-  font-family: Arial, "Microsoft JhengHei", sans-serif;
+  font-family: var(--site-font);
   font-size: var(--size, 28px);
   font-weight: 900;
   line-height: 1;
@@ -145,7 +166,7 @@ button {
 
 .effect-feathers {
   color: rgba(255, 255, 255, 0.95);
-  font-family: Georgia, serif;
+  font-family: var(--site-font);
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
   animation-name: effect-feather;
 }
@@ -200,7 +221,7 @@ button {
 .effect-blessings {
   min-width: max-content;
   color: #fff4a3;
-  font-family: "Courier New", "Microsoft JhengHei", monospace;
+  font-family: var(--site-font);
   font-size: var(--size, 18px);
   letter-spacing: 0.08em;
   text-shadow: 0 0 9px #ffd400, 0 0 20px #ffd400;
@@ -212,13 +233,52 @@ button {
   left: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) 54px;
+  grid-template-columns: 86px minmax(0, 1fr) 32px;
   align-items: start;
   gap: clamp(12px, 2.4vw, 34px);
   width: 100%;
   min-height: 112px;
   padding: calc(var(--safe-top) + 14px) clamp(16px, 3.4vw, 52px) 22px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0));
+}
+
+.hud-left {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.language-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 212, 0, 0.72);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.72);
+  color: var(--yellow);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  touch-action: manipulation;
+}
+
+.language-button:hover,
+.language-button:focus-visible {
+  border-color: #fff;
+  background: var(--yellow);
+  color: #050505;
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
 }
 
 .timer-panel {
@@ -240,7 +300,7 @@ button {
 
 .timer-value {
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: clamp(22px, 2.5vw, 34px);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.05em;
@@ -277,9 +337,7 @@ button {
 }
 
 .skip-button {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: start;
+  flex: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -293,7 +351,7 @@ button {
 }
 
 .skip-x {
-  font-family: Arial, sans-serif;
+  font-family: var(--site-font);
   font-size: 34px;
   font-weight: 300;
   line-height: 1;
@@ -322,19 +380,45 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid rgba(255, 212, 0, 0.72);
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.72);
   color: var(--yellow);
-  font-size: 18px;
-  font-weight: 900;
   cursor: pointer;
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   touch-action: manipulation;
+}
+
+.leaderboard-icon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  width: 17px;
+  height: 16px;
+}
+
+.leaderboard-icon span {
+  display: block;
+  width: 4px;
+  border: 1px solid currentColor;
+  background: currentColor;
+}
+
+.leaderboard-icon span:nth-child(1) {
+  height: 8px;
+}
+
+.leaderboard-icon span:nth-child(2) {
+  height: 15px;
+}
+
+.leaderboard-icon span:nth-child(3) {
+  height: 11px;
 }
 
 .leaderboard-button:hover,
@@ -381,16 +465,31 @@ button {
 
 .start-prompt-card {
   display: block;
-  width: min(82vw, 330px);
-  padding: 19px 22px;
+  width: min(44vw, 165px);
+  min-width: 142px;
+  padding: 10px 11px;
   border: 1px solid var(--yellow);
   border-radius: 2px;
-  background: rgba(0, 0, 0, 0.86);
+  background: rgba(0, 0, 0, 0.75);
   box-shadow: 0 0 45px rgba(0, 0, 0, 0.7);
   text-align: center;
 }
 
-.start-prompt strong,
+.start-prompt strong {
+  display: block;
+  color: var(--yellow);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.start-prompt-card small {
+  display: block;
+  margin-top: 4px;
+  color: #c9c5bb;
+  font-size: 9px;
+}
+
 .playback-error strong {
   display: block;
   color: var(--yellow);
@@ -399,7 +498,6 @@ button {
   letter-spacing: 0.08em;
 }
 
-.start-prompt-card small,
 .playback-error span {
   display: block;
   margin-top: 8px;
@@ -471,9 +569,6 @@ button {
 .ticker-separator {
   flex: none;
   padding: 0 3.25rem;
-  color: #fff4a3;
-  font-size: 13px;
-  text-shadow: 0 0 9px var(--yellow);
 }
 
 .work-mark {
@@ -485,7 +580,7 @@ button {
   flex-direction: column;
   align-items: flex-end;
   color: rgba(255, 255, 255, 0.58);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -535,7 +630,7 @@ button {
 .leaderboard-kicker {
   margin: 0 0 5px;
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -584,7 +679,7 @@ button {
 
 .leaderboard-total strong {
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 21px;
   font-variant-numeric: tabular-nums;
 }
@@ -660,7 +755,7 @@ button {
 
 .profile-contribution strong {
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 17px;
 }
 
@@ -710,7 +805,7 @@ button {
 
 .leaderboard-rank {
   color: #88857c;
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 13px;
   font-weight: 800;
   text-align: center;
@@ -732,7 +827,7 @@ button {
 
 .leaderboard-score {
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 14px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -794,7 +889,7 @@ button {
 .editor-kicker {
   margin: 0 0 5px;
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -864,7 +959,7 @@ button {
 .database-note span {
   margin-bottom: 5px;
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -911,7 +1006,7 @@ button {
 
 #effectIntensityValue {
   color: var(--yellow);
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
 }
 
 #effectIntensity {
@@ -1005,7 +1100,7 @@ button {
   border-left: 3px solid #55534a;
   background: #090909;
   color: #aaa79e;
-  font-family: "Courier New", monospace;
+  font-family: var(--site-font);
   font-size: 11px;
   line-height: 1.5;
 }

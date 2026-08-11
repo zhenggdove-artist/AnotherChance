@@ -12,13 +12,13 @@
       content="Miracle—Another Chance：觀看廣告，為祂累積再次降臨的機會。"
     />
     <title>Miracle — Another Chance</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260812-i18n" />
     <script src="./site-config.js" defer></script>
-    <script src="./script.js" defer></script>
+    <script src="./script.js?v=20260812-i18n" defer></script>
   </head>
   <body>
     <main class="experience" id="experience">
-      <section class="video-stage" aria-label="垃圾廣告播放器">
+      <section class="video-stage" aria-label="垃圾廣告播放器" data-i18n-aria="videoStageLabel">
         <div class="ambient-light" aria-hidden="true"></div>
         <video
           id="adVideo"
@@ -33,17 +33,27 @@
         <div class="effect-layer" id="effectLayer" aria-hidden="true"></div>
 
         <header class="watch-hud">
-          <button
-            class="skip-button"
-            id="skipButton"
-            type="button"
-            aria-label="觀看三十秒後關閉這則廣告"
-            aria-disabled="true"
-            disabled
-            hidden
-          >
-            <span class="skip-x" aria-hidden="true">×</span>
-          </button>
+          <div class="hud-left">
+            <button
+              class="language-button"
+              id="languageButton"
+              type="button"
+              aria-label="切換成英文"
+            >C/N</button>
+
+            <button
+              class="skip-button"
+              id="skipButton"
+              type="button"
+              aria-label="觀看三十秒後關閉這則廣告"
+              data-i18n-aria="skipLockedLabel"
+              aria-disabled="true"
+              disabled
+              hidden
+            >
+              <span class="skip-x" aria-hidden="true">×</span>
+            </button>
+          </div>
 
           <div class="timer-panel" aria-live="polite">
             <div class="timer-meta">
@@ -54,6 +64,7 @@
               id="progressTrack"
               role="progressbar"
               aria-label="可關閉廣告前的觀看進度"
+              data-i18n-aria="progressLabel"
               aria-valuemin="0"
               aria-valuemax="30"
               aria-valuenow="0"
@@ -66,34 +77,39 @@
             class="leaderboard-button"
             id="leaderboardButton"
             type="button"
-            aria-label="開啟共同貢獻排行榜"
+            aria-label="開啟奉獻榜"
+            data-i18n-aria="leaderboardOpenLabel"
           >
-            <span aria-hidden="true">榜</span>
+            <span class="leaderboard-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
           </button>
         </header>
 
-        <button class="start-prompt" id="startPrompt" type="button" aria-label="點一下螢幕開始有聲播放">
+        <button class="start-prompt" id="startPrompt" type="button" aria-label="點一下螢幕開始有聲播放" data-i18n-aria="startPromptLabel">
           <span class="start-prompt-card">
-            <strong>點一下螢幕開始</strong>
-            <small>聲音將自動開啟</small>
+            <strong data-i18n="startTitle">點一下螢幕開始</strong>
+            <small data-i18n="startSubtitle">聲音將自動開啟</small>
           </span>
         </button>
 
         <div class="playback-error" id="playbackError" role="alert" hidden>
-          <strong>廣告載入失敗</strong>
-          <span>請重新整理頁面，或按 Shift + T 更換影片。</span>
+          <strong data-i18n="playbackErrorTitle">廣告載入失敗</strong>
+          <span data-i18n="playbackErrorBody">請重新整理頁面，或按 Shift + T 更換影片。</span>
         </div>
 
-        <footer class="ticker" aria-label="累積觀看次數">
+        <footer class="ticker" aria-label="累積觀看次數" data-i18n-aria="tickerLabel">
           <div class="ticker-live" aria-live="polite" aria-atomic="true" id="tickerLive"></div>
           <div class="ticker-track" id="tickerTrack" aria-hidden="true">
             <span class="ticker-group" id="tickerGroupA">
               <span class="ticker-copy" id="tickerCopyA"></span>
-              <span class="ticker-separator">✦</span>
+              <span class="ticker-separator"></span>
             </span>
             <span class="ticker-group">
               <span class="ticker-copy" id="tickerCopyB"></span>
-              <span class="ticker-separator">✦</span>
+              <span class="ticker-separator"></span>
             </span>
           </div>
         </footer>
@@ -110,23 +126,24 @@
         <header class="leaderboard-header">
           <div>
             <p class="leaderboard-kicker">MIRACLE CONTRIBUTORS</p>
-            <h1 id="leaderboardTitle">共同貢獻排行榜</h1>
+            <h1 id="leaderboardTitle" data-i18n="leaderboardTitle">奉獻榜</h1>
           </div>
           <button
             class="leaderboard-close"
             id="leaderboardClose"
             type="button"
             aria-label="關閉排行榜"
+            data-i18n-aria="leaderboardCloseLabel"
           >×</button>
         </header>
 
         <div class="leaderboard-total">
-          <span>神目前已累積觀看</span>
-          <strong><span id="leaderboardTotal">—</span> 次</strong>
+          <span data-i18n="leaderboardTotalLabel">神目前已累積觀看</span>
+          <strong><span id="leaderboardTotal">—</span><span data-i18n="viewsSuffix"> 次</span></strong>
         </div>
 
         <form class="profile-form" id="profileForm">
-          <label for="profileName">登記你的名字</label>
+          <label for="profileName" data-i18n="profileLabel">登記你的名字</label>
           <div class="profile-input-row">
             <input
               id="profileName"
@@ -135,20 +152,21 @@
               maxlength="20"
               autocomplete="nickname"
               placeholder="最多 20 個字"
+              data-i18n-placeholder="profilePlaceholder"
               required
             />
-            <button id="profileSave" type="submit">登記</button>
+            <button id="profileSave" type="submit" data-i18n="profileRegister">登記</button>
           </div>
-          <p class="profile-help">這個裝置會記住你的貢獻；排行榜名字不可重複。</p>
+          <p class="profile-help" data-i18n="profileHelp">這個裝置會記住你的貢獻；排行榜名字不可重複。</p>
           <p class="profile-contribution">
-            你目前已貢獻 <strong id="profileContribution">0</strong> 次
+            <span data-i18n="profileContributionPrefix">你目前已貢獻 </span><strong id="profileContribution">0</strong><span data-i18n="viewsSuffix"> 次</span>
           </p>
           <output class="profile-status" id="profileStatus" role="status" aria-live="polite"></output>
         </form>
 
         <div class="leaderboard-list-wrap">
           <ol class="leaderboard-list" id="leaderboardList"></ol>
-          <p class="leaderboard-empty" id="leaderboardEmpty">尚未有人登記名字。成為第一位貢獻者。</p>
+          <p class="leaderboard-empty" id="leaderboardEmpty" data-i18n="leaderboardEmpty">尚未有人登記名字。成為第一位貢獻者。</p>
         </div>
       </section>
     </dialog>
@@ -158,46 +176,46 @@
         <header class="editor-header">
           <div>
             <p class="editor-kicker">INSTALLATION CONTROL</p>
-            <h1 id="editorTitle">作品編輯模式</h1>
+            <h1 id="editorTitle" data-i18n="editorTitle">作品編輯模式</h1>
           </div>
-          <button class="editor-close" id="editorClose" type="button" aria-label="關閉編輯模式">×</button>
+          <button class="editor-close" id="editorClose" type="button" aria-label="關閉編輯模式" data-i18n-aria="editorCloseLabel">×</button>
         </header>
 
         <div class="editor-body">
           <section class="editor-section database-note">
-            <span>共同資料庫已啟用</span>
-            <strong>N 由所有參與者共同累積</strong>
-            <p>初始值為 751；此處不再使用隨機或手動假數字。</p>
+            <span data-i18n="databaseEnabled">共同資料庫已啟用</span>
+            <strong data-i18n="databaseShared">N 由所有參與者共同累積</strong>
+            <p data-i18n="databaseInitial">初始值為 121；此處不再使用隨機或手動假數字。</p>
           </section>
 
           <section class="editor-section effect-controls">
-            <label class="field-label" for="effectType">按下 X 的特效</label>
+            <label class="field-label" for="effectType" data-i18n="effectLabel">按下 X 的特效</label>
             <select id="effectType" name="effectType">
-              <option value="hearts">01・愛心上升</option>
-              <option value="stars">02・金色星芒</option>
-              <option value="halos">03・神聖光環</option>
-              <option value="petals">04・玫瑰花瓣</option>
-              <option value="feathers">05・天使羽毛</option>
-              <option value="bubbles">06・奇蹟光球</option>
-              <option value="rays">07・復活光束</option>
-              <option value="confetti">08・慶典彩紙</option>
-              <option value="blessings">09・祝福文字</option>
-              <option value="pixels">10・像素閃光</option>
+              <option value="hearts" data-i18n="effectHearts">01・愛心上升</option>
+              <option value="stars" data-i18n="effectStars">02・金色星芒</option>
+              <option value="halos" data-i18n="effectHalos">03・神聖光環</option>
+              <option value="petals" data-i18n="effectPetals">04・玫瑰花瓣</option>
+              <option value="feathers" data-i18n="effectFeathers">05・天使羽毛</option>
+              <option value="bubbles" data-i18n="effectBubbles">06・奇蹟光球</option>
+              <option value="rays" data-i18n="effectRays">07・復活光束</option>
+              <option value="confetti" data-i18n="effectConfetti">08・慶典彩紙</option>
+              <option value="blessings" data-i18n="effectBlessings">09・祝福文字</option>
+              <option value="pixels" data-i18n="effectPixels">10・像素閃光</option>
             </select>
 
             <div class="intensity-row">
-              <label for="effectIntensity">特效強度</label>
+              <label for="effectIntensity" data-i18n="intensityLabel">特效強度</label>
               <output id="effectIntensityValue" for="effectIntensity">標準</output>
             </div>
             <input id="effectIntensity" name="effectIntensity" type="range" min="1" max="3" step="1" value="2" />
-            <p class="field-help">可選低、標準或強烈；設定會在下一次按 X 時套用。</p>
+            <p class="field-help" data-i18n="intensityHelp">可選低、標準或強烈；設定會在下一次按 X 時套用。</p>
           </section>
 
           <section class="editor-section">
-            <label class="field-label" for="videoFiles">替換廣告影片</label>
+            <label class="field-label" for="videoFiles" data-i18n="replaceVideos">替換廣告影片</label>
             <label class="file-picker" for="videoFiles">
-              <span class="file-picker-title">選擇一支或多支影片</span>
-              <span class="file-picker-subtitle" id="filePickerSubtitle">未選擇時會保留目前影片</span>
+              <span class="file-picker-title" data-i18n="chooseVideos">選擇一支或多支影片</span>
+              <span class="file-picker-subtitle" id="filePickerSubtitle" data-i18n="keepCurrentVideos">未選擇時會保留目前影片</span>
             </label>
             <input
               class="visually-hidden"
@@ -207,32 +225,32 @@
               accept="video/mp4,video/webm,.mp4,.webm"
               multiple
             />
-            <p class="field-help">建議使用 H.264 MP4；每個檔案需小於 95 MB，才能直接 push 到 GitHub。</p>
+            <p class="field-help" data-i18n="videoHelp">建議使用 H.264 MP4；每個檔案需小於 95 MB，才能直接 push 到 GitHub。</p>
           </section>
 
           <section class="repo-section">
             <div>
-              <h2>連接本機 Repository</h2>
-              <p>選擇 GitHub Desktop 裡真正含有 <code>.git</code> 與 <code>index.html</code> 的 AnotherChance 資料夾。</p>
+              <h2 data-i18n="connectRepo">連接本機 Repository</h2>
+              <p data-i18n="repoHelp">選擇 GitHub Desktop 裡真正含有 .git 與 index.html 的 AnotherChance 資料夾。</p>
             </div>
-            <button class="secondary-button" id="chooseRepoButton" type="button">選擇資料夾</button>
+            <button class="secondary-button" id="chooseRepoButton" type="button" data-i18n="chooseFolder">選擇資料夾</button>
           </section>
 
           <output class="editor-status" id="editorStatus" role="status" aria-live="polite">
-            尚未連接資料夾
+            <span data-i18n="folderNotConnected">尚未連接資料夾</span>
           </output>
         </div>
 
         <footer class="editor-actions">
-          <button class="text-button" id="editorCancel" type="button">取消</button>
-          <button class="save-button" id="saveButton" type="submit">儲存到 Repository</button>
+          <button class="text-button" id="editorCancel" type="button" data-i18n="cancel">取消</button>
+          <button class="save-button" id="saveButton" type="submit" data-i18n="saveToRepo">儲存到 Repository</button>
         </footer>
       </form>
     </dialog>
 
     <div class="save-toast" id="saveToast" role="status" aria-live="polite" hidden>
-      <strong>已儲存</strong>
-      <span>現在可以到 GitHub Desktop commit 並 push。</span>
+      <strong data-i18n="saved">已儲存</strong>
+      <span data-i18n="savedHelp">現在可以到 GitHub Desktop commit 並 push。</span>
     </div>
   </body>
 </html>
