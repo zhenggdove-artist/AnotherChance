@@ -25,7 +25,9 @@
     effectLayer: document.querySelector("#effectLayer"),
     tickerLive: document.querySelector("#tickerLive"),
     tickerTrack: document.querySelector("#tickerTrack"),
+    tickerGroupA: document.querySelector("#tickerGroupA"),
     tickerCopyA: document.querySelector("#tickerCopyA"),
+    tickerCopyB: document.querySelector("#tickerCopyB"),
     editorDialog: document.querySelector("#editorDialog"),
     editorForm: document.querySelector("#editorForm"),
     editorClose: document.querySelector("#editorClose"),
@@ -56,7 +58,7 @@
   let toastTimer = null;
   let objectUrls = [];
   let effectCleanupTimer = null;
-  let tickerViewportWidth = window.innerWidth;
+  let lastRandomSegmentKey = null;
 
   const randomStart = () => Math.floor(Math.random() * 201) + 600;
   const validConfiguredStart = activeConfig.startingCount !== null
@@ -90,19 +92,32 @@
   }
 
   function restartTicker() {
-    const distance = window.innerWidth + elements.tickerTrack.scrollWidth;
-    const duration = Math.max(12, distance / 68);
-    elements.tickerTrack.classList.remove("is-running");
-    elements.tickerTrack.style.setProperty("--ticker-duration", `${duration.toFixed(2)}s`);
+    const distance = elements.tickerGroupA.getBoundingClientRect().width;
+    const viewportWidth = elements.tickerTrack.parentElement.clientWidth;
+    const pixelsPerSecond = 68;
+    const loopDuration = Math.max(8, distance / pixelsPerSecond);
+    const enterDuration = Math.max(0.1, viewportWidth / pixelsPerSecond);
+
+    elements.tickerTrack.classList.remove("is-entering", "is-running");
+    elements.tickerTrack.style.setProperty("--ticker-distance", `${distance.toFixed(2)}px`);
+    elements.tickerTrack.style.setProperty("--ticker-end", `${(-distance).toFixed(2)}px`);
+    elements.tickerTrack.style.setProperty("--ticker-start", `${viewportWidth}px`);
+    elements.tickerTrack.style.setProperty("--ticker-duration", `${loopDuration.toFixed(2)}s`);
+    elements.tickerTrack.style.setProperty("--ticker-enter-duration", `${enterDuration.toFixed(2)}s`);
     void elements.tickerTrack.offsetWidth;
-    elements.tickerTrack.classList.add("is-running");
+    elements.tickerTrack.classList.add("is-entering");
   }
 
   function renderTicker({ announce = false, restart = false } = {}) {
     const message = tickerMessage();
     elements.tickerCopyA.textContent = message;
+    elements.tickerCopyB.textContent = message;
     if (announce) elements.tickerLive.textContent = message;
-    if (restart || !elements.tickerTrack.classList.contains("is-running")) restartTicker();
+    if (
+      restart
+      || (!elements.tickerTrack.classList.contains("is-entering")
+        && !elements.tickerTrack.classList.contains("is-running"))
+    ) restartTicker();
   }
 
   const EFFECT_PROFILES = {
@@ -146,13 +161,13 @@
       particle.style.setProperty("--rotate", `${-45 + Math.random() * 90}deg`);
       particle.style.setProperty("--angle", `${index * (360 / count)}deg`);
       particle.style.setProperty("--delay", `${Math.random() * (profile.delayMax ?? 0.28)}s`);
-      particle.style.setProperty("--duration", `${1.45 + Math.random() * 1.15}s`);
+      particle.style.setProperty("--duration", `${2.8 + Math.random() * 1.4}s`);
       particle.style.setProperty("--particle-color", randomItem(profile.colors));
       fragment.appendChild(particle);
     }
 
     elements.effectLayer.appendChild(fragment);
-    effectCleanupTimer = window.setTimeout(() => elements.effectLayer.replaceChildren(), 3400);
+    effectCleanupTimer = window.setTimeout(() => elements.effectLayer.replaceChildren(), 5200);
   }
 
   function videoPathAt(index) {
@@ -204,6 +219,82 @@
     if (elements.video.ended || elements.video.currentTime >= elements.video.duration - 0.2) {
       elements.video.currentTime = 0;
     }
+    return tryPlay();
+  }
+
+  function waitForVideoEvent(eventName, timeoutMilliseconds = 1800) {
+    return new Promise((resolve) => {
+      let timeoutId = null;
+      const finish = () => {
+        elements.video.removeEventListener(eventName, finish);
+        window.clearTimeout(timeoutId);
+        resolve();
+      };
+
+      elements.video.addEventListener(eventName, finish, { once: true });
+      timeoutId = window.setTimeout(finish, timeoutMilliseconds);
+    });
+  }
+
+  async function ensureVideoMetadata() {
+    if (elements.video.readyState >= 1 && Number.isFinite(elements.video.duration)) return;
+    await waitForVideoEvent("loadedmetadata");
+  }
+
+  async function jumpToRandomAdSegment() {
+    let sourceChanged = false;
+
+    if (videoSources.length > 1) {
+      const otherVideos = videoSources
+        .map((_, index) => index)
+        .filter((index) => index !== currentVideoIndex);
+      const nextVideoIndex = randomItem(otherVideos);
+      await loadVideo(nextVideoIndex, { preservePlayback: false });
+      sourceChanged = true;
+    }
+
+    await ensureVideoMetadata();
+    const duration = elements.video.duration;
+    if (!Number.isFinite(duration) || duration <= 1) return advanceVideo();
+
+    const segmentLength = 30;
+    const requiredPlayback = Math.max(1, Number(activeConfig.skipDelaySeconds) || 30) + 2;
+    const latestSafeTarget = Math.max(0, duration - requiredPlayback);
+    const segmentCount = Math.max(1, Math.floor(latestSafeTarget / segmentLength) + 1);
+    const currentSegment = Math.min(segmentCount - 1, Math.floor(elements.video.currentTime / segmentLength));
+    const sourceKey = videoPathAt(currentVideoIndex);
+    const allSegments = Array.from({ length: segmentCount }, (_, index) => index);
+
+    let candidates = sourceChanged
+      ? allSegments
+      : allSegments.filter((index) => Math.abs(index - currentSegment) >= 2);
+    if (candidates.length === 0) {
+      candidates = allSegments.filter((index) => index !== currentSegment);
+    }
+
+    const unusedCandidates = candidates.filter((index) => `${sourceKey}:${index}` !== lastRandomSegmentKey);
+    if (unusedCandidates.length > 0) candidates = unusedCandidates;
+
+    let targetTime;
+    if (candidates.length > 0) {
+      const targetSegment = randomItem(candidates);
+      const segmentStart = targetSegment * segmentLength;
+      const safeStart = Math.min(latestSafeTarget, segmentStart + 1);
+      const safeEnd = Math.max(safeStart, Math.min(latestSafeTarget, segmentStart + segmentLength - 1));
+      targetTime = safeStart + Math.random() * (safeEnd - safeStart);
+      lastRandomSegmentKey = `${sourceKey}:${targetSegment}`;
+    } else {
+      const available = Math.max(0.5, duration - 1);
+      targetTime = Math.random() * available;
+      if (Math.abs(targetTime - elements.video.currentTime) < Math.min(8, duration / 3)) {
+        targetTime = (targetTime + duration / 2) % available;
+      }
+      lastRandomSegmentKey = `${sourceKey}:${Math.floor(targetTime / segmentLength)}`;
+    }
+
+    const seekCompleted = waitForVideoEvent("seeked", 1600);
+    elements.video.currentTime = targetTime;
+    await seekCompleted;
     return tryPlay();
   }
 
@@ -278,7 +369,7 @@
     elements.fadeCurtain.style.transition = "opacity 900ms cubic-bezier(0.55, 0, 1, 0.45)";
     elements.fadeCurtain.classList.add("is-dark");
     await wait(900);
-    await advanceVideo();
+    await jumpToRandomAdSegment();
     resetWatchTimer();
 
     elements.fadeCurtain.style.transition = "none";
@@ -512,6 +603,12 @@
   elements.effectIntensity.addEventListener("input", renderIntensityLabel);
   elements.editorForm.addEventListener("submit", saveEditorChanges);
 
+  elements.tickerTrack.addEventListener("animationend", (event) => {
+    if (event.animationName !== "ticker-enter" || !elements.tickerTrack.classList.contains("is-entering")) return;
+    elements.tickerTrack.classList.remove("is-entering");
+    elements.tickerTrack.classList.add("is-running");
+  });
+
   elements.editorDialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeEditor();
@@ -555,13 +652,6 @@
     if (now - lastTouchEnd <= 350) event.preventDefault();
     lastTouchEnd = now;
   }, { passive: false });
-
-  window.addEventListener("resize", () => {
-    if (window.innerWidth !== tickerViewportWidth) {
-      tickerViewportWidth = window.innerWidth;
-      restartTicker();
-    }
-  });
 
   renderTicker({ restart: true });
   renderTimer();

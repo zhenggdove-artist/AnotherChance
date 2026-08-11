@@ -124,7 +124,7 @@ button {
   opacity: 0;
   text-shadow: 0 0 12px currentColor, 0 2px 2px rgba(0, 0, 0, 0.4);
   transform: translate3d(0, 0, 0) rotate(var(--rotate, 0deg)) scale(0.45);
-  animation: effect-rise var(--duration, 2s) cubic-bezier(0.16, 0.68, 0.3, 1) var(--delay, 0s) forwards;
+  animation: effect-rise var(--duration, 3s) cubic-bezier(0.16, 0.68, 0.3, 1) var(--delay, 0s) forwards;
   will-change: transform, opacity;
 }
 
@@ -168,7 +168,7 @@ button {
   border: 3px solid rgba(255, 225, 74, 0.95);
   border-radius: 50%;
   box-shadow: 0 0 16px #ffd400, inset 0 0 14px rgba(255, 212, 0, 0.62);
-  animation: effect-halo var(--duration, 1.5s) ease-out var(--delay, 0s) forwards;
+  animation: effect-halo var(--duration, 3s) ease-out var(--delay, 0s) forwards;
 }
 
 .effect-rays {
@@ -180,7 +180,7 @@ button {
   background: linear-gradient(to top, rgba(255, 212, 0, 0), #fff8b9 48%, rgba(255, 212, 0, 0));
   box-shadow: 0 0 18px #ffd400;
   transform-origin: 50% 100%;
-  animation: effect-ray var(--duration, 1.5s) ease-out var(--delay, 0s) forwards;
+  animation: effect-ray var(--duration, 3s) ease-out var(--delay, 0s) forwards;
 }
 
 .effect-confetti,
@@ -403,15 +403,30 @@ button {
 }
 
 .ticker-track {
-  display: block;
+  display: flex;
+  align-items: center;
   width: max-content;
   will-change: transform;
   visibility: hidden;
 }
 
+.ticker-track.is-entering,
 .ticker-track.is-running {
   visibility: visible;
-  animation: ticker-pass var(--ticker-duration, 22s) linear infinite;
+}
+
+.ticker-track.is-entering {
+  animation: ticker-enter var(--ticker-enter-duration, 6s) linear 1 forwards;
+}
+
+.ticker-track.is-running {
+  animation: ticker-loop var(--ticker-duration, 22s) linear infinite;
+}
+
+.ticker-group {
+  display: flex;
+  flex: none;
+  align-items: center;
 }
 
 .ticker-copy {
@@ -422,6 +437,14 @@ button {
   line-height: 1.15;
   letter-spacing: 0.03em;
   white-space: nowrap;
+}
+
+.ticker-separator {
+  flex: none;
+  padding: 0 3.25rem;
+  color: #fff4a3;
+  font-size: 13px;
+  text-shadow: 0 0 9px var(--yellow);
 }
 
 .work-mark {
@@ -774,12 +797,21 @@ button {
   border: 0 !important;
 }
 
-@keyframes ticker-pass {
+@keyframes ticker-enter {
   from {
-    transform: translate3d(100vw, 0, 0);
+    transform: translate3d(var(--ticker-start, 100vw), 0, 0);
   }
   to {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ticker-loop {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--ticker-end, -600px), 0, 0);
   }
 }
 
