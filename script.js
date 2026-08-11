@@ -5,7 +5,9 @@
     revision: "default",
     startingCount: null,
     videoFiles: ["assets/ads/ad-01.mp4"],
-    skipDelaySeconds: 30
+    skipDelaySeconds: 30,
+    effectType: "hearts",
+    effectIntensity: 2
   };
 
   const MAX_GITHUB_FILE_SIZE = 95 * 1024 * 1024;
@@ -20,14 +22,18 @@
     startPrompt: document.querySelector("#startPrompt"),
     playbackError: document.querySelector("#playbackError"),
     fadeCurtain: document.querySelector("#fadeCurtain"),
+    effectLayer: document.querySelector("#effectLayer"),
     tickerLive: document.querySelector("#tickerLive"),
+    tickerTrack: document.querySelector("#tickerTrack"),
     tickerCopyA: document.querySelector("#tickerCopyA"),
-    tickerCopyB: document.querySelector("#tickerCopyB"),
     editorDialog: document.querySelector("#editorDialog"),
     editorForm: document.querySelector("#editorForm"),
     editorClose: document.querySelector("#editorClose"),
     editorCancel: document.querySelector("#editorCancel"),
     startingCount: document.querySelector("#startingCount"),
+    effectType: document.querySelector("#effectType"),
+    effectIntensity: document.querySelector("#effectIntensity"),
+    effectIntensityValue: document.querySelector("#effectIntensityValue"),
     videoFiles: document.querySelector("#videoFiles"),
     filePickerSubtitle: document.querySelector("#filePickerSubtitle"),
     chooseRepoButton: document.querySelector("#chooseRepoButton"),
@@ -49,6 +55,8 @@
   let resumeAfterEditor = false;
   let toastTimer = null;
   let objectUrls = [];
+  let effectCleanupTimer = null;
+  let tickerViewportWidth = window.innerWidth;
 
   const randomStart = () => Math.floor(Math.random() * 201) + 600;
   const validConfiguredStart = activeConfig.startingCount !== null
@@ -81,11 +89,70 @@
     return `神目前已累積觀看廣告${accumulatedCount.toLocaleString("zh-TW")}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步`;
   }
 
-  function renderTicker({ announce = false } = {}) {
+  function restartTicker() {
+    const distance = window.innerWidth + elements.tickerTrack.scrollWidth;
+    const duration = Math.max(12, distance / 68);
+    elements.tickerTrack.classList.remove("is-running");
+    elements.tickerTrack.style.setProperty("--ticker-duration", `${duration.toFixed(2)}s`);
+    void elements.tickerTrack.offsetWidth;
+    elements.tickerTrack.classList.add("is-running");
+  }
+
+  function renderTicker({ announce = false, restart = false } = {}) {
     const message = tickerMessage();
     elements.tickerCopyA.textContent = message;
-    elements.tickerCopyB.textContent = message;
     if (announce) elements.tickerLive.textContent = message;
+    if (restart || !elements.tickerTrack.classList.contains("is-running")) restartTicker();
+  }
+
+  const EFFECT_PROFILES = {
+    hearts: { count: 32, symbols: ["♥"], colors: ["#ff174f", "#ff5c8a", "#ffd0dc", "#ffffff"], min: 32, max: 64, startMin: 0, startMax: 24, delayMax: 0.14 },
+    stars: { count: 26, symbols: ["✦", "✧", "★"], colors: ["#ffd400", "#fff4a3", "#ffffff"], min: 18, max: 42 },
+    halos: { count: 6, symbols: [""], colors: ["#ffd400"], min: 58, max: 118 },
+    petals: { count: 28, symbols: ["●", "❀"], colors: ["#ff315f", "#ff789b", "#ffd0dc"], min: 12, max: 26 },
+    feathers: { count: 20, symbols: ["❯", "⌇"], colors: ["#ffffff", "#fff7d1"], min: 22, max: 42 },
+    bubbles: { count: 20, symbols: [""], colors: ["#fff4a3"], min: 18, max: 54 },
+    rays: { count: 12, symbols: [""], colors: ["#ffd400"], min: 3, max: 8 },
+    confetti: { count: 38, symbols: [""], colors: ["#ffd400", "#ff315f", "#00e7ff", "#ffffff"], min: 7, max: 14 },
+    blessings: { count: 16, symbols: ["+1", "AMEN", "奇蹟", "復活"], colors: ["#ffd400", "#fff4a3"], min: 14, max: 22 },
+    pixels: { count: 34, symbols: [""], colors: ["#ffd400", "#ffffff", "#ff315f"], min: 6, max: 14 }
+  };
+
+  function randomItem(items) {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
+  function triggerEffect(type = "hearts", intensity = 2) {
+    const safeType = EFFECT_PROFILES[type] ? type : "hearts";
+    const profile = EFFECT_PROFILES[safeType];
+    const strength = Math.min(3, Math.max(1, Number(intensity) || 2));
+    const multiplier = [0, 0.72, 1, 1.38][strength];
+    const count = Math.round(profile.count * multiplier);
+    const fragment = document.createDocumentFragment();
+
+    window.clearTimeout(effectCleanupTimer);
+    elements.effectLayer.dataset.effect = safeType;
+    elements.effectLayer.replaceChildren();
+
+    for (let index = 0; index < count; index += 1) {
+      const particle = document.createElement("span");
+      const size = profile.min + Math.random() * (profile.max - profile.min);
+      particle.className = `effect-particle effect-${safeType}`;
+      particle.textContent = randomItem(profile.symbols);
+      particle.style.setProperty("--x", `${4 + Math.random() * 92}%`);
+      particle.style.setProperty("--start-bottom", `${(profile.startMin ?? -12) + Math.random() * ((profile.startMax ?? -12) - (profile.startMin ?? -12))}%`);
+      particle.style.setProperty("--size", `${size.toFixed(1)}px`);
+      particle.style.setProperty("--drift", `${-110 + Math.random() * 220}px`);
+      particle.style.setProperty("--rotate", `${-45 + Math.random() * 90}deg`);
+      particle.style.setProperty("--angle", `${index * (360 / count)}deg`);
+      particle.style.setProperty("--delay", `${Math.random() * (profile.delayMax ?? 0.28)}s`);
+      particle.style.setProperty("--duration", `${1.45 + Math.random() * 1.15}s`);
+      particle.style.setProperty("--particle-color", randomItem(profile.colors));
+      fragment.appendChild(particle);
+    }
+
+    elements.effectLayer.appendChild(fragment);
+    effectCleanupTimer = window.setTimeout(() => elements.effectLayer.replaceChildren(), 3400);
   }
 
   function videoPathAt(index) {
@@ -205,7 +272,8 @@
     elements.skipButton.classList.remove("is-ready");
     accumulatedCount += 1;
     storeCount();
-    renderTicker({ announce: true });
+    renderTicker({ announce: true, restart: true });
+    triggerEffect(activeConfig.effectType, activeConfig.effectIntensity);
 
     elements.fadeCurtain.style.transition = "opacity 900ms cubic-bezier(0.55, 0, 1, 0.45)";
     elements.fadeCurtain.classList.add("is-dark");
@@ -235,6 +303,9 @@
       && Number.isInteger(Number(activeConfig.startingCount))
       ? String(activeConfig.startingCount)
       : "";
+    elements.effectType.value = EFFECT_PROFILES[activeConfig.effectType] ? activeConfig.effectType : "hearts";
+    elements.effectIntensity.value = String(Math.min(3, Math.max(1, Number(activeConfig.effectIntensity) || 2)));
+    renderIntensityLabel();
     selectedFiles = [];
     elements.videoFiles.value = "";
     elements.filePickerSubtitle.textContent = "未選擇時會保留目前影片";
@@ -308,7 +379,7 @@
     countStorageKey = `miracle-another-chance:${activeConfig.revision}`;
     accumulatedCount = activeConfig.startingCount ?? randomStart();
     storeCount();
-    renderTicker({ announce: true });
+    renderTicker({ announce: true, restart: true });
     resetWatchTimer();
 
     if (files.length > 0) {
@@ -337,6 +408,9 @@
       elements.startingCount.focus();
       return;
     }
+
+    const selectedEffectType = EFFECT_PROFILES[elements.effectType.value] ? elements.effectType.value : "hearts";
+    const selectedEffectIntensity = Math.min(3, Math.max(1, Number(elements.effectIntensity.value) || 2));
 
     const oversized = selectedFiles.find((file) => file.size > MAX_GITHUB_FILE_SIZE);
     if (oversized) {
@@ -375,7 +449,9 @@
         revision: new Date().toISOString(),
         startingCount: parsedStart,
         videoFiles: nextVideoFiles,
-        skipDelaySeconds: 30
+        skipDelaySeconds: 30,
+        effectType: selectedEffectType,
+        effectIntensity: selectedEffectIntensity
       };
 
       await writeFile(repoHandle, "site-config.js", makeConfigSource(nextConfig));
@@ -422,12 +498,18 @@
     elements.filePickerSubtitle.textContent = `${selectedFiles.length} 支影片・共 ${totalMegabytes.toFixed(1)} MB`;
   }
 
+  function renderIntensityLabel() {
+    const labels = { 1: "低", 2: "標準", 3: "強烈" };
+    elements.effectIntensityValue.textContent = labels[elements.effectIntensity.value] || "標準";
+  }
+
   elements.skipButton.addEventListener("click", handleSkip);
   elements.startPrompt.addEventListener("click", activateExperience);
   elements.editorClose.addEventListener("click", closeEditor);
   elements.editorCancel.addEventListener("click", closeEditor);
   elements.chooseRepoButton.addEventListener("click", chooseRepository);
   elements.videoFiles.addEventListener("change", handleSelectedFiles);
+  elements.effectIntensity.addEventListener("input", renderIntensityLabel);
   elements.editorForm.addEventListener("submit", saveEditorChanges);
 
   elements.editorDialog.addEventListener("cancel", (event) => {
@@ -474,7 +556,14 @@
     lastTouchEnd = now;
   }, { passive: false });
 
-  renderTicker();
+  window.addEventListener("resize", () => {
+    if (window.innerWidth !== tickerViewportWidth) {
+      tickerViewportWidth = window.innerWidth;
+      restartTicker();
+    }
+  });
+
+  renderTicker({ restart: true });
   renderTimer();
   loadVideo(0, { preservePlayback: false });
   window.requestAnimationFrame(tick);
