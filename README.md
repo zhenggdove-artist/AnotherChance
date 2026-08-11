@@ -17,10 +17,11 @@
 請用最新版 **Google Chrome** 或 **Microsoft Edge** 開啟已發布的網站。
 
 1. 按 `Shift + T` 開啟「作品編輯模式」。
-2. 可從 10 種「按下 X 的特效」中選擇一種，並設定低、標準或強烈三段強度。
-3. 如要更換影片，可選一支或多支 MP4 / WebM。未選影片時，只更新特效設定。
-4. 按「選擇資料夾」，選擇 GitHub Desktop 使用的 repository 根目錄，也就是同時含有 `.git`、`index.html` 和 `site-config.js` 的那一層。
-5. 按「儲存到 Repository」。完成後切回 GitHub Desktop，commit 並 push。
+2. 可編輯中英文跑馬燈文字；請保留 `{count}`，網站會在該位置插入即時觀看次數。
+3. 可從 10 種「按下 X 的特效」中選擇一種，並設定低、標準或強烈三段強度。
+4. 如要更換影片，可選一支或多支 MP4 / WebM。未選影片時，只更新文字與特效設定。
+5. 按「選擇資料夾」，選擇 GitHub Desktop 使用的 repository 根目錄，也就是同時含有 `.git`、`index.html` 和 `site-config.js` 的那一層。
+6. 按「儲存到 Repository」。完成後切回 GitHub Desktop，commit 並 push。
 
 影片會依序播放；清單播完後從第一支重新開始。每支影片建議使用 H.264 + AAC 的 MP4，而且單檔必須小於 95 MB，否則 GitHub 不能直接接受 push。
 

@@ -66,7 +66,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -868,7 +869,8 @@ button {
   touch-action: pan-y;
 }
 
-.editor input {
+.editor input,
+.editor textarea {
   -webkit-user-select: text;
   user-select: text;
 }
@@ -955,6 +957,31 @@ button {
   margin-bottom: 9px;
   font-size: 14px;
   font-weight: 800;
+}
+
+.ticker-controls textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid #4c4b44;
+  border-radius: 2px;
+  outline: none;
+  background: #090909;
+  color: var(--white);
+  font-size: 13px;
+  line-height: 1.55;
+  touch-action: manipulation;
+}
+
+.ticker-controls textarea:focus {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.12);
+}
+
+.ticker-english-label {
+  margin-top: 20px;
 }
 
 .database-note {

@@ -39,7 +39,7 @@
         document.head.appendChild(preload);
       })();
     </script>
-    <link rel="stylesheet" href="./styles.css?v=20260812-font-ready" />
+    <link rel="stylesheet" href="./styles.css?v=20260812-ticker-editor" />
     <script>
       (() => {
         const family = document.documentElement.dataset.language === "en"
@@ -53,7 +53,7 @@
       })();
     </script>
     <script src="./site-config.js" defer></script>
-    <script src="./script.js?v=20260812-font-ready" defer></script>
+    <script src="./script.js?v=20260812-ticker-editor" defer></script>
   </head>
   <body>
     <main class="experience" id="experience">
@@ -225,6 +225,17 @@
             <span data-i18n="databaseEnabled">共同資料庫已啟用</span>
             <strong data-i18n="databaseShared">N 由所有參與者共同累積</strong>
             <p data-i18n="databaseInitial">N 直接等於榜單觀看次數總和；不使用額外起始值。</p>
+          </section>
+
+          <section class="editor-section ticker-controls">
+            <h2 data-i18n="tickerEditorTitle">跑馬燈文字</h2>
+            <label class="field-label" for="tickerTextZh" data-i18n="tickerChineseLabel">中文內容</label>
+            <textarea id="tickerTextZh" name="tickerTextZh" rows="4" maxlength="300" required>目前已累積觀看廣告{count}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步</textarea>
+            <p class="field-help" data-i18n="tickerTemplateHelp">請保留 {count}，網站會在這個位置顯示即時觀看次數。</p>
+
+            <label class="field-label ticker-english-label" for="tickerTextEn" data-i18n="tickerEnglishLabel">英文內容</label>
+            <textarea id="tickerTextEn" name="tickerTextEn" rows="4" maxlength="500" required>There have now been {count} advertisement views. Thank you for participating. Your contribution brings Him one step closer to resurrection.</textarea>
+            <p class="field-help" data-i18n="tickerTemplateHelp">請保留 {count}，網站會在這個位置顯示即時觀看次數。</p>
           </section>
 
           <section class="editor-section effect-controls">

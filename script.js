@@ -7,7 +7,9 @@
     videoFiles: ["assets/ads/ad-01.mp4"],
     skipDelaySeconds: 30,
     effectType: "hearts",
-    effectIntensity: 2
+    effectIntensity: 2,
+    tickerTextZh: "目前已累積觀看廣告{count}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步",
+    tickerTextEn: "There have now been {count} advertisement views. Thank you for participating. Your contribution brings Him one step closer to resurrection."
   };
 
   const MAX_GITHUB_FILE_SIZE = 95 * 1024 * 1024;
@@ -42,6 +44,10 @@
       databaseEnabled: "共同資料庫已啟用",
       databaseShared: "N 由所有參與者共同累積",
       databaseInitial: "N 直接等於榜單觀看次數總和；不使用額外起始值。",
+      tickerEditorTitle: "跑馬燈文字",
+      tickerChineseLabel: "中文內容",
+      tickerEnglishLabel: "英文內容",
+      tickerTemplateHelp: "請保留 {count}，網站會在這個位置顯示即時觀看次數。",
       effectLabel: "按下 X 的特效",
       effectHearts: "01・愛心上升",
       effectStars: "02・金色星芒",
@@ -69,7 +75,7 @@
       savedHelp: "現在可以到 GitHub Desktop commit 並 push。",
       databaseConnecting: "正在連接共同資料庫…",
       databaseUnavailable: "共同資料庫暫時無法連線，請稍後重新整理",
-      tickerMessage: "神目前已累積觀看廣告{count}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步",
+      tickerMessage: "目前已累積觀看廣告{count}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步",
       leaderboardScore: "{count} 次",
       leaderboardUnavailable: "排行榜暫時無法連線，請稍後再試。",
       contributionWriteFailed: "此次貢獻尚未寫入資料庫，請確認網路後再試。",
@@ -90,6 +96,7 @@
       writingVideo: "正在寫入影片 {current} / {total}：{name}",
       editorSaved: "儲存完成。GitHub Desktop 現在會顯示可 commit 的變更。",
       editorSaveFailed: "儲存失敗；請確認選取的是正確資料夾，而且檔案沒有被其他程式鎖定。",
+      tickerCountRequired: "中英文跑馬燈文字都必須包含 {count}，才能顯示即時觀看次數。",
       videosSelected: "{count} 支影片・共 {size} MB",
       intensityLow: "低",
       intensityStandard: "標準",
@@ -123,6 +130,10 @@
       databaseEnabled: "SHARED DATABASE ENABLED",
       databaseShared: "N IS ACCUMULATED BY ALL PARTICIPANTS",
       databaseInitial: "N equals the sum of all views on the board. No extra starting value is used.",
+      tickerEditorTitle: "TICKER TEXT",
+      tickerChineseLabel: "CHINESE TEXT",
+      tickerEnglishLabel: "ENGLISH TEXT",
+      tickerTemplateHelp: "Keep {count} where the live view count should appear.",
       effectLabel: "EFFECT AFTER PRESSING X",
       effectHearts: "01・RISING HEARTS",
       effectStars: "02・GOLDEN STARS",
@@ -150,7 +161,7 @@
       savedHelp: "You can now commit and push in GitHub Desktop.",
       databaseConnecting: "CONNECTING TO THE SHARED DATABASE…",
       databaseUnavailable: "THE SHARED DATABASE IS TEMPORARILY UNAVAILABLE. REFRESH LATER.",
-      tickerMessage: "God has now accumulated {count} advertisement views. Thank you for participating. Your contribution brings Him one step closer to resurrection.",
+      tickerMessage: "There have now been {count} advertisement views. Thank you for participating. Your contribution brings Him one step closer to resurrection.",
       leaderboardScore: "{count} VIEWS",
       leaderboardUnavailable: "The Offering Board is temporarily unavailable. Please try again later.",
       contributionWriteFailed: "This offering was not recorded. Check the network and try again.",
@@ -171,6 +182,7 @@
       writingVideo: "WRITING VIDEO {current} / {total}: {name}",
       editorSaved: "SAVED. GitHub Desktop now shows changes ready to commit.",
       editorSaveFailed: "Save failed. Confirm the correct folder was selected and no other program has locked the files.",
+      tickerCountRequired: "Both ticker texts must include {count} so the live view count can be displayed.",
       videosSelected: "{count} VIDEOS・{size} MB TOTAL",
       intensityLow: "LOW",
       intensityStandard: "STANDARD",
@@ -232,6 +244,8 @@
     editorForm: document.querySelector("#editorForm"),
     editorClose: document.querySelector("#editorClose"),
     editorCancel: document.querySelector("#editorCancel"),
+    tickerTextZh: document.querySelector("#tickerTextZh"),
+    tickerTextEn: document.querySelector("#tickerTextEn"),
     effectType: document.querySelector("#effectType"),
     effectIntensity: document.querySelector("#effectIntensity"),
     effectIntensityValue: document.querySelector("#effectIntensityValue"),
@@ -291,7 +305,11 @@
 
   function tickerMessage() {
     if (!Number.isInteger(accumulatedCount)) return t(databaseMessageKey);
-    return t("tickerMessage", { count: formatNumber(accumulatedCount) });
+    const configuredTemplate = currentLanguage === "en"
+      ? activeConfig.tickerTextEn
+      : activeConfig.tickerTextZh;
+    const template = String(configuredTemplate || t("tickerMessage"));
+    return template.replaceAll("{count}", formatNumber(accumulatedCount));
   }
 
   function updateTickerLoopMetrics() {
@@ -854,6 +872,8 @@
     elements.video.pause();
     elements.effectType.value = EFFECT_PROFILES[activeConfig.effectType] ? activeConfig.effectType : "hearts";
     elements.effectIntensity.value = String(Math.min(3, Math.max(1, Number(activeConfig.effectIntensity) || 2)));
+    elements.tickerTextZh.value = String(activeConfig.tickerTextZh || DEFAULT_CONFIG.tickerTextZh);
+    elements.tickerTextEn.value = String(activeConfig.tickerTextEn || DEFAULT_CONFIG.tickerTextEn);
     renderIntensityLabel();
     selectedFiles = [];
     elements.videoFiles.value = "";
@@ -925,6 +945,7 @@
 
   function applySavedSettings(nextConfig, files) {
     activeConfig = { ...activeConfig, ...nextConfig };
+    renderTicker({ restart: true });
     void syncSharedState({ announce: true });
     resetWatchTimer();
 
@@ -949,6 +970,14 @@
 
     const selectedEffectType = EFFECT_PROFILES[elements.effectType.value] ? elements.effectType.value : "hearts";
     const selectedEffectIntensity = Math.min(3, Math.max(1, Number(elements.effectIntensity.value) || 2));
+    const tickerTextZh = elements.tickerTextZh.value.trim();
+    const tickerTextEn = elements.tickerTextEn.value.trim();
+
+    if (!tickerTextZh.includes("{count}") || !tickerTextEn.includes("{count}")) {
+      setEditorStatus("tickerCountRequired", "error");
+      (!tickerTextZh.includes("{count}") ? elements.tickerTextZh : elements.tickerTextEn).focus();
+      return;
+    }
 
     const oversized = selectedFiles.find((file) => file.size > MAX_GITHUB_FILE_SIZE);
     if (oversized) {
@@ -993,7 +1022,9 @@
         videoFiles: nextVideoFiles,
         skipDelaySeconds: 30,
         effectType: selectedEffectType,
-        effectIntensity: selectedEffectIntensity
+        effectIntensity: selectedEffectIntensity,
+        tickerTextZh,
+        tickerTextEn
       };
 
       await writeFile(repoHandle, "site-config.js", makeConfigSource(nextConfig));
