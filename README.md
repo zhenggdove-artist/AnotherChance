@@ -17,16 +17,17 @@
 請用最新版 **Google Chrome** 或 **Microsoft Edge** 開啟已發布的網站。
 
 1. 按 `Shift + T` 開啟「作品編輯模式」。
-2. N 留白時，下一版會隨機從 600–800 開始；輸入整數時則固定從該數字開始。
-3. 可從 10 種「按下 X 的特效」中選擇一種，並設定低、標準或強烈三段強度。
-4. 如要更換影片，可選一支或多支 MP4 / WebM。未選影片時，只更新 N 與特效設定。
-5. 按「選擇資料夾」，選擇 GitHub Desktop 使用的 repository 根目錄，也就是同時含有 `.git`、`index.html` 和 `site-config.js` 的那一層。
-6. 按「儲存到 Repository」。完成後切回 GitHub Desktop，commit 並 push。
+2. 可從 10 種「按下 X 的特效」中選擇一種，並設定低、標準或強烈三段強度。
+3. 如要更換影片，可選一支或多支 MP4 / WebM。未選影片時，只更新特效設定。
+4. 按「選擇資料夾」，選擇 GitHub Desktop 使用的 repository 根目錄，也就是同時含有 `.git`、`index.html` 和 `site-config.js` 的那一層。
+5. 按「儲存到 Repository」。完成後切回 GitHub Desktop，commit 並 push。
 
 影片會依序播放；清單播完後從第一支重新開始。每支影片建議使用 H.264 + AAC 的 MP4，而且單檔必須小於 95 MB，否則 GitHub 不能直接接受 push。
 
 ## 計數方式
 
-這是純靜態網站，因此累積次數保存在每一台裝置自己的瀏覽器中。相同裝置重新整理後會保留數字；不同觀眾或不同裝置之間不會共用同一個全球計數。每次透過編輯模式儲存新設定後，會從新設定的 N（或新的 600–800 隨機值）重新開始。
+全站 N 與排行榜由 Cloudflare Workers Free + D1 Free 的共同資料庫管理，初始值固定為 751。不同觀眾與不同裝置會共用同一個總數；多人同時按 X 時，資料庫會以原子更新避免互相覆蓋。
 
-若作品未來需要所有觀眾共用同一個即時數字，需要再接一個線上資料庫與 API。
+每個裝置會保存一個不含個資的隨機識別碼。觀眾可在右上角排行榜登記最多 20 個字的名字，登記前已累積的貢獻也會保留。後台會拒絕 27 秒內的重複貢獻，並以事件 ID 防止網路重送造成重複加分。
+
+後台程式與資料庫 migration 位於 `backend/`。正式 API：<https://miracle-another-chance-api.zhenggdove-artist.workers.dev>

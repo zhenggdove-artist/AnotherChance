@@ -3,7 +3,7 @@
 
   const DEFAULT_CONFIG = {
     revision: "default",
-    startingCount: null,
+    apiBaseUrl: "https://miracle-another-chance-api.zhenggdove-artist.workers.dev",
     videoFiles: ["assets/ads/ad-01.mp4"],
     skipDelaySeconds: 30,
     effectType: "hearts",
@@ -28,11 +28,21 @@
     tickerGroupA: document.querySelector("#tickerGroupA"),
     tickerCopyA: document.querySelector("#tickerCopyA"),
     tickerCopyB: document.querySelector("#tickerCopyB"),
+    leaderboardButton: document.querySelector("#leaderboardButton"),
+    leaderboardDialog: document.querySelector("#leaderboardDialog"),
+    leaderboardClose: document.querySelector("#leaderboardClose"),
+    leaderboardTotal: document.querySelector("#leaderboardTotal"),
+    leaderboardList: document.querySelector("#leaderboardList"),
+    leaderboardEmpty: document.querySelector("#leaderboardEmpty"),
+    profileForm: document.querySelector("#profileForm"),
+    profileName: document.querySelector("#profileName"),
+    profileSave: document.querySelector("#profileSave"),
+    profileContribution: document.querySelector("#profileContribution"),
+    profileStatus: document.querySelector("#profileStatus"),
     editorDialog: document.querySelector("#editorDialog"),
     editorForm: document.querySelector("#editorForm"),
     editorClose: document.querySelector("#editorClose"),
     editorCancel: document.querySelector("#editorCancel"),
-    startingCount: document.querySelector("#startingCount"),
     effectType: document.querySelector("#effectType"),
     effectIntensity: document.querySelector("#effectIntensity"),
     effectIntensityValue: document.querySelector("#effectIntensityValue"),
@@ -55,54 +65,61 @@
   let experienceActivated = false;
   let repoHandle = null;
   let resumeAfterEditor = false;
+  let resumeAfterLeaderboard = false;
   let toastTimer = null;
   let objectUrls = [];
   let effectCleanupTimer = null;
   let lastRandomSegmentKey = null;
 
-  const randomStart = () => Math.floor(Math.random() * 201) + 600;
-  const validConfiguredStart = activeConfig.startingCount !== null
-    && activeConfig.startingCount !== ""
-    && Number.isInteger(Number(activeConfig.startingCount))
-    ? Math.max(0, Number(activeConfig.startingCount))
-    : null;
+  let accumulatedCount = null;
+  let sharedProfile = { name: null, contributions: 0 };
+  let databaseMessage = "正在連接共同資料庫…";
 
-  let countStorageKey = `miracle-another-chance:${activeConfig.revision}`;
-  let accumulatedCount = readStoredCount(countStorageKey) ?? validConfiguredStart ?? randomStart();
+  function createUuid() {
+    if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+    return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+  }
 
-  function readStoredCount(key) {
+  function getDeviceId() {
+    const storageKey = "miracle-another-chance:device-id";
     try {
-      const value = Number.parseInt(localStorage.getItem(key), 10);
-      return Number.isInteger(value) && value >= 0 ? value : null;
+      const existing = localStorage.getItem(storageKey);
+      if (existing) return existing;
+      const created = createUuid();
+      localStorage.setItem(storageKey, created);
+      return created;
     } catch {
-      return null;
+      return createUuid();
     }
   }
 
-  function storeCount() {
-    try {
-      localStorage.setItem(countStorageKey, String(accumulatedCount));
-    } catch {
-      // The artwork remains functional when browser storage is unavailable.
-    }
-  }
+  const deviceId = getDeviceId();
 
   function tickerMessage() {
+    if (!Number.isInteger(accumulatedCount)) return databaseMessage;
     return `神目前已累積觀看廣告${accumulatedCount.toLocaleString("zh-TW")}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步`;
   }
 
-  function restartTicker() {
+  function updateTickerLoopMetrics() {
     const distance = elements.tickerGroupA.getBoundingClientRect().width;
-    const viewportWidth = elements.tickerTrack.parentElement.clientWidth;
     const pixelsPerSecond = 68;
     const loopDuration = Math.max(8, distance / pixelsPerSecond);
-    const enterDuration = Math.max(0.1, viewportWidth / pixelsPerSecond);
-
-    elements.tickerTrack.classList.remove("is-entering", "is-running");
     elements.tickerTrack.style.setProperty("--ticker-distance", `${distance.toFixed(2)}px`);
     elements.tickerTrack.style.setProperty("--ticker-end", `${(-distance).toFixed(2)}px`);
-    elements.tickerTrack.style.setProperty("--ticker-start", `${viewportWidth}px`);
     elements.tickerTrack.style.setProperty("--ticker-duration", `${loopDuration.toFixed(2)}s`);
+  }
+
+  function restartTicker() {
+    const viewportWidth = elements.tickerTrack.parentElement.clientWidth;
+    const enterDuration = Math.max(0.1, viewportWidth / 68);
+
+    updateTickerLoopMetrics();
+    elements.tickerTrack.classList.remove("is-entering", "is-running");
+    elements.tickerTrack.style.setProperty("--ticker-start", `${viewportWidth}px`);
     elements.tickerTrack.style.setProperty("--ticker-enter-duration", `${enterDuration.toFixed(2)}s`);
     void elements.tickerTrack.offsetWidth;
     elements.tickerTrack.classList.add("is-entering");
@@ -113,11 +130,156 @@
     elements.tickerCopyA.textContent = message;
     elements.tickerCopyB.textContent = message;
     if (announce) elements.tickerLive.textContent = message;
-    if (
+    const shouldRestart = (
       restart
       || (!elements.tickerTrack.classList.contains("is-entering")
         && !elements.tickerTrack.classList.contains("is-running"))
-    ) restartTicker();
+    );
+    if (shouldRestart) restartTicker();
+    else updateTickerLoopMetrics();
+  }
+
+  function apiEndpoint(path) {
+    return `${String(activeConfig.apiBaseUrl || DEFAULT_CONFIG.apiBaseUrl).replace(/\/$/, "")}${path}`;
+  }
+
+  async function apiRequest(path, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const response = await fetch(apiEndpoint(path), {
+        ...options,
+        headers: {
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...options.headers
+        },
+        cache: "no-store",
+        credentials: "omit",
+        signal: controller.signal
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(data.error || "api_error");
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+      return data;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  function setProfileStatus(message, state = "neutral") {
+    elements.profileStatus.textContent = message;
+    elements.profileStatus.classList.toggle("is-error", state === "error");
+    elements.profileStatus.classList.toggle("is-success", state === "success");
+  }
+
+  function renderProfile() {
+    elements.profileContribution.textContent = Number(sharedProfile.contributions || 0).toLocaleString("zh-TW");
+    if (sharedProfile.name && document.activeElement !== elements.profileName) {
+      elements.profileName.value = sharedProfile.name;
+      elements.profileSave.textContent = "更新";
+    } else if (!sharedProfile.name) {
+      elements.profileSave.textContent = "登記";
+    }
+  }
+
+  function applySharedState(data, { announce = false, restartTickerNow = false } = {}) {
+    if (Number.isInteger(Number(data?.totalViews)) && Number(data.totalViews) >= 0) {
+      accumulatedCount = Number(data.totalViews);
+      databaseMessage = "正在連接共同資料庫…";
+    }
+    if (data?.profile) {
+      sharedProfile = {
+        name: data.profile.name || null,
+        contributions: Math.max(0, Number(data.profile.contributions) || 0)
+      };
+    }
+    elements.leaderboardTotal.textContent = Number.isInteger(accumulatedCount)
+      ? accumulatedCount.toLocaleString("zh-TW")
+      : "—";
+    renderProfile();
+    renderTicker({ announce, restart: restartTickerNow });
+  }
+
+  async function syncSharedState({ announce = false } = {}) {
+    try {
+      const data = await apiRequest(`/api/state?deviceId=${encodeURIComponent(deviceId)}`);
+      applySharedState(data, { announce });
+      return true;
+    } catch (error) {
+      console.error("Shared database sync failed", error);
+      if (!Number.isInteger(accumulatedCount)) {
+        databaseMessage = "共同資料庫暫時無法連線，請稍後重新整理";
+        renderTicker({ announce: true });
+      }
+      return false;
+    }
+  }
+
+  function renderLeaderboard(rows = []) {
+    const fragment = document.createDocumentFragment();
+    elements.leaderboardList.replaceChildren();
+
+    rows.forEach((row) => {
+      const item = document.createElement("li");
+      const rank = document.createElement("span");
+      const name = document.createElement("span");
+      const score = document.createElement("span");
+      rank.className = "leaderboard-rank";
+      name.className = "leaderboard-name";
+      score.className = "leaderboard-score";
+      rank.textContent = String(row.rank);
+      name.textContent = row.name;
+      score.textContent = `${Number(row.contributions).toLocaleString("zh-TW")} 次`;
+      if (sharedProfile.name && row.name === sharedProfile.name) item.classList.add("is-me");
+      item.append(rank, name, score);
+      fragment.appendChild(item);
+    });
+
+    elements.leaderboardList.appendChild(fragment);
+    elements.leaderboardEmpty.hidden = rows.length > 0;
+  }
+
+  async function refreshLeaderboard() {
+    try {
+      const data = await apiRequest("/api/leaderboard");
+      applySharedState(data);
+      renderLeaderboard(data.leaderboard || []);
+      return true;
+    } catch (error) {
+      console.error("Leaderboard load failed", error);
+      setProfileStatus("排行榜暫時無法連線，請稍後再試。", "error");
+      return false;
+    }
+  }
+
+  async function recordContribution() {
+    const eventId = createUuid();
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const data = await apiRequest("/api/contribute", {
+          method: "POST",
+          body: JSON.stringify({ deviceId, eventId })
+        });
+        applySharedState(data, { announce: true });
+        if (elements.leaderboardDialog.open) await refreshLeaderboard();
+        return true;
+      } catch (error) {
+        if (error.status === 429 || attempt === 1) {
+          console.error("Contribution was not recorded", error);
+          setProfileStatus("此次貢獻尚未寫入資料庫，請確認網路後再試。", "error");
+          return false;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 700));
+      }
+    }
+
+    return false;
   }
 
   const EFFECT_PROFILES = {
@@ -361,9 +523,8 @@
     elements.skipButton.disabled = true;
     elements.skipButton.hidden = true;
     elements.skipButton.classList.remove("is-ready");
-    accumulatedCount += 1;
-    storeCount();
-    renderTicker({ announce: true, restart: true });
+    renderTicker({ restart: true });
+    void recordContribution();
     triggerEffect(activeConfig.effectType, activeConfig.effectIntensity);
 
     elements.fadeCurtain.style.transition = "opacity 900ms cubic-bezier(0.55, 0, 1, 0.45)";
@@ -379,6 +540,53 @@
     isTransitioning = false;
   }
 
+  async function openLeaderboard() {
+    if (elements.leaderboardDialog.open || elements.editorDialog.open) return;
+    resumeAfterLeaderboard = !elements.video.paused;
+    elements.video.pause();
+    setProfileStatus("正在讀取共同資料庫…");
+    elements.leaderboardDialog.showModal();
+    await syncSharedState();
+    await refreshLeaderboard();
+    if (elements.profileStatus.textContent === "正在讀取共同資料庫…") setProfileStatus("");
+  }
+
+  function closeLeaderboard() {
+    if (!elements.leaderboardDialog.open) return;
+    elements.leaderboardDialog.close();
+    if (resumeAfterLeaderboard) tryPlay();
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    const name = elements.profileName.value.normalize("NFKC").replace(/\s+/g, " ").trim();
+    if (Array.from(name).length < 1 || Array.from(name).length > 20) {
+      setProfileStatus("名字需為 1–20 個字。", "error");
+      elements.profileName.focus();
+      return;
+    }
+
+    elements.profileSave.disabled = true;
+    setProfileStatus("正在登記…");
+    try {
+      const data = await apiRequest("/api/profile", {
+        method: "POST",
+        body: JSON.stringify({ deviceId, name })
+      });
+      applySharedState(data);
+      setProfileStatus("名字已登記，之前在這個裝置累積的次數也已保留。", "success");
+      await refreshLeaderboard();
+    } catch (error) {
+      if (error.status === 409) {
+        setProfileStatus("這個名字已被使用，請換一個名字。", "error");
+      } else {
+        setProfileStatus("登記失敗，請確認網路後再試。", "error");
+      }
+    } finally {
+      elements.profileSave.disabled = false;
+    }
+  }
+
   function setEditorStatus(message, state = "neutral") {
     elements.editorStatus.textContent = message;
     elements.editorStatus.classList.toggle("is-success", state === "success");
@@ -386,14 +594,9 @@
   }
 
   function openEditor() {
-    if (elements.editorDialog.open) return;
+    if (elements.editorDialog.open || elements.leaderboardDialog.open) return;
     resumeAfterEditor = !elements.video.paused;
     elements.video.pause();
-    elements.startingCount.value = activeConfig.startingCount !== null
-      && activeConfig.startingCount !== ""
-      && Number.isInteger(Number(activeConfig.startingCount))
-      ? String(activeConfig.startingCount)
-      : "";
     elements.effectType.value = EFFECT_PROFILES[activeConfig.effectType] ? activeConfig.effectType : "hearts";
     elements.effectIntensity.value = String(Math.min(3, Math.max(1, Number(activeConfig.effectIntensity) || 2)));
     renderIntensityLabel();
@@ -466,11 +669,8 @@
   }
 
   function applySavedSettings(nextConfig, files) {
-    activeConfig = { ...nextConfig };
-    countStorageKey = `miracle-another-chance:${activeConfig.revision}`;
-    accumulatedCount = activeConfig.startingCount ?? randomStart();
-    storeCount();
-    renderTicker({ announce: true, restart: true });
+    activeConfig = { ...activeConfig, ...nextConfig };
+    void syncSharedState({ announce: true });
     resetWatchTimer();
 
     if (files.length > 0) {
@@ -491,14 +691,6 @@
 
   async function saveEditorChanges(event) {
     event.preventDefault();
-
-    const rawStart = elements.startingCount.value.trim();
-    const parsedStart = rawStart === "" ? null : Number(rawStart);
-    if (parsedStart !== null && (!Number.isInteger(parsedStart) || parsedStart < 0)) {
-      setEditorStatus("N 必須是 0 或更大的整數，也可以留白使用 600–800 的隨機值。", "error");
-      elements.startingCount.focus();
-      return;
-    }
 
     const selectedEffectType = EFFECT_PROFILES[elements.effectType.value] ? elements.effectType.value : "hearts";
     const selectedEffectIntensity = Math.min(3, Math.max(1, Number(elements.effectIntensity.value) || 2));
@@ -538,7 +730,7 @@
 
       const nextConfig = {
         revision: new Date().toISOString(),
-        startingCount: parsedStart,
+        apiBaseUrl: activeConfig.apiBaseUrl || DEFAULT_CONFIG.apiBaseUrl,
         videoFiles: nextVideoFiles,
         skipDelaySeconds: 30,
         effectType: selectedEffectType,
@@ -596,6 +788,9 @@
 
   elements.skipButton.addEventListener("click", handleSkip);
   elements.startPrompt.addEventListener("click", activateExperience);
+  elements.leaderboardButton.addEventListener("click", openLeaderboard);
+  elements.leaderboardClose.addEventListener("click", closeLeaderboard);
+  elements.profileForm.addEventListener("submit", saveProfile);
   elements.editorClose.addEventListener("click", closeEditor);
   elements.editorCancel.addEventListener("click", closeEditor);
   elements.chooseRepoButton.addEventListener("click", chooseRepository);
@@ -612,6 +807,11 @@
   elements.editorDialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeEditor();
+  });
+
+  elements.leaderboardDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeLeaderboard();
   });
 
   elements.video.addEventListener("ended", () => {
@@ -631,6 +831,7 @@
 
   document.addEventListener("visibilitychange", () => {
     lastVideoTime = Number.isFinite(elements.video.currentTime) ? elements.video.currentTime : 0;
+    if (!document.hidden) void syncSharedState();
   });
 
   document.addEventListener("dblclick", (event) => {
@@ -638,8 +839,9 @@
   }, { passive: false });
 
   document.addEventListener("selectstart", (event) => {
-    const insideEditor = event.target instanceof Element && event.target.closest(".editor");
-    if (!insideEditor) event.preventDefault();
+    const insideInteractiveDialog = event.target instanceof Element
+      && event.target.closest(".editor, .leaderboard");
+    if (!insideInteractiveDialog) event.preventDefault();
   });
 
   document.addEventListener("gesturestart", (event) => {
@@ -656,5 +858,9 @@
   renderTicker({ restart: true });
   renderTimer();
   loadVideo(0, { preservePlayback: false });
+  void syncSharedState();
+  window.setInterval(() => {
+    if (!document.hidden && !elements.leaderboardDialog.open) void syncSharedState();
+  }, 60000);
   window.requestAnimationFrame(tick);
 })();

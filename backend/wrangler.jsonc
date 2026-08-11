@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "miracle-another-chance-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-11",
+  "workers_dev": true,
+  "vars": {
+    "SITE_ORIGIN": "https://zhenggdove-artist.github.io"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "miracle-another-chance",
+      "database_id": "771e84ce-f0d4-4cd6-9473-a677ea993108",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "CONTRIBUTION_RATE_LIMITER",
+      "namespace_id": "7512026",
+      "simple": {
+        "limit": 3,
+        "period": 60
+      }
+    }
+  ]
+}

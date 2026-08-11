@@ -61,6 +61,15 @@
               <span class="progress-fill" id="progressFill"></span>
             </div>
           </div>
+
+          <button
+            class="leaderboard-button"
+            id="leaderboardButton"
+            type="button"
+            aria-label="開啟共同貢獻排行榜"
+          >
+            <span aria-hidden="true">榜</span>
+          </button>
         </header>
 
         <button class="start-prompt" id="startPrompt" type="button" aria-label="點一下螢幕開始有聲播放">
@@ -96,6 +105,54 @@
       </section>
     </main>
 
+    <dialog class="leaderboard" id="leaderboardDialog" aria-labelledby="leaderboardTitle">
+      <section class="leaderboard-card">
+        <header class="leaderboard-header">
+          <div>
+            <p class="leaderboard-kicker">MIRACLE CONTRIBUTORS</p>
+            <h1 id="leaderboardTitle">共同貢獻排行榜</h1>
+          </div>
+          <button
+            class="leaderboard-close"
+            id="leaderboardClose"
+            type="button"
+            aria-label="關閉排行榜"
+          >×</button>
+        </header>
+
+        <div class="leaderboard-total">
+          <span>神目前已累積觀看</span>
+          <strong><span id="leaderboardTotal">—</span> 次</strong>
+        </div>
+
+        <form class="profile-form" id="profileForm">
+          <label for="profileName">登記你的名字</label>
+          <div class="profile-input-row">
+            <input
+              id="profileName"
+              name="profileName"
+              type="text"
+              maxlength="20"
+              autocomplete="nickname"
+              placeholder="最多 20 個字"
+              required
+            />
+            <button id="profileSave" type="submit">登記</button>
+          </div>
+          <p class="profile-help">這個裝置會記住你的貢獻；排行榜名字不可重複。</p>
+          <p class="profile-contribution">
+            你目前已貢獻 <strong id="profileContribution">0</strong> 次
+          </p>
+          <output class="profile-status" id="profileStatus" role="status" aria-live="polite"></output>
+        </form>
+
+        <div class="leaderboard-list-wrap">
+          <ol class="leaderboard-list" id="leaderboardList"></ol>
+          <p class="leaderboard-empty" id="leaderboardEmpty">尚未有人登記名字。成為第一位貢獻者。</p>
+        </div>
+      </section>
+    </dialog>
+
     <dialog class="editor" id="editorDialog" aria-labelledby="editorTitle">
       <form class="editor-card" id="editorForm" method="dialog">
         <header class="editor-header">
@@ -107,18 +164,10 @@
         </header>
 
         <div class="editor-body">
-          <section class="editor-section">
-            <label class="field-label" for="startingCount">N 的起始數值</label>
-            <input
-              id="startingCount"
-              name="startingCount"
-              type="number"
-              min="0"
-              step="1"
-              inputmode="numeric"
-              placeholder="留白＝每次新設定隨機 600–800"
-            />
-            <p class="field-help">手動輸入後，網站會從你設定的數字開始累積。</p>
+          <section class="editor-section database-note">
+            <span>共同資料庫已啟用</span>
+            <strong>N 由所有參與者共同累積</strong>
+            <p>初始值為 751；此處不再使用隨機或手動假數字。</p>
           </section>
 
           <section class="editor-section effect-controls">

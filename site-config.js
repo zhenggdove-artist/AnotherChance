@@ -1,6 +1,6 @@
 window.MIRACLE_CONFIG = {
-  "revision": "2026-08-11T12:52:35.687Z",
-  "startingCount": null,
+  "revision": "2026-08-12-shared-database",
+  "apiBaseUrl": "https://miracle-another-chance-api.zhenggdove-artist.workers.dev",
   "videoFiles": [
     "assets/ads/ad-01.mp4"
   ],

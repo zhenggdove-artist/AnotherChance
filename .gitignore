@@ -2,3 +2,6 @@
 Thumbs.db
 desktop.ini
 assets/ads/ADS.mp4
+/.wrangler/
+backend/.wrangler/
+backend/node_modules/
