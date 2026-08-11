@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Media assets must remain binary.
+*.mp4 binary
+*.webm binary

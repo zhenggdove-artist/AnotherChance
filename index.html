@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <meta
+      name="description"
+      content="Miracle—Another Chance：觀看廣告，為祂累積再次降臨的機會。"
+    />
+    <title>Miracle — Another Chance</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./site-config.js" defer></script>
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <main class="experience" id="experience">
+      <section class="video-stage" aria-label="垃圾廣告播放器">
+        <div class="ambient-light" aria-hidden="true"></div>
+        <video
+          id="adVideo"
+          class="ad-video"
+          autoplay
+          muted
+          playsinline
+          preload="auto"
+          disablepictureinpicture
+        ></video>
+
+        <div class="scanlines" aria-hidden="true"></div>
+        <div class="fade-curtain" id="fadeCurtain" aria-hidden="true"></div>
+
+        <header class="watch-hud">
+          <button
+            class="skip-button"
+            id="skipButton"
+            type="button"
+            aria-label="觀看三十秒後關閉這則廣告"
+            aria-disabled="true"
+            disabled
+          >
+            <span class="skip-x" aria-hidden="true">×</span>
+            <span class="skip-state" id="skipState">尚不可關閉</span>
+          </button>
+
+          <div class="timer-panel" aria-live="polite">
+            <div class="timer-meta">
+              <span class="timer-label">廣告觀看中</span>
+              <output class="timer-value" id="timerValue">00:30</output>
+            </div>
+            <div
+              class="progress-track"
+              id="progressTrack"
+              role="progressbar"
+              aria-label="可關閉廣告前的觀看進度"
+              aria-valuemin="0"
+              aria-valuemax="30"
+              aria-valuenow="0"
+            >
+              <span class="progress-fill" id="progressFill"></span>
+            </div>
+          </div>
+
+          <button class="sound-button" id="soundButton" type="button" aria-pressed="false">
+            <span class="sound-dot" aria-hidden="true"></span>
+            <span id="soundLabel">聲音：關</span>
+          </button>
+        </header>
+
+        <button class="start-prompt" id="startPrompt" type="button" hidden>
+          <span>點擊開始觀看</span>
+          <small>影片開始後才會累積觀看時間</small>
+        </button>
+
+        <div class="playback-error" id="playbackError" role="alert" hidden>
+          <strong>廣告載入失敗</strong>
+          <span>請重新整理頁面，或按 Shift + T 更換影片。</span>
+        </div>
+
+        <footer class="ticker" aria-label="累積觀看次數">
+          <div class="ticker-live" aria-live="polite" aria-atomic="true" id="tickerLive"></div>
+          <div class="ticker-track" id="tickerTrack" aria-hidden="true">
+            <span class="ticker-copy" id="tickerCopyA"></span>
+            <span class="ticker-copy" id="tickerCopyB"></span>
+          </div>
+        </footer>
+
+        <div class="work-mark" aria-hidden="true">
+          <span>MIRACLE</span>
+          <span>ANOTHER CHANCE</span>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="editor" id="editorDialog" aria-labelledby="editorTitle">
+      <form class="editor-card" id="editorForm" method="dialog">
+        <header class="editor-header">
+          <div>
+            <p class="editor-kicker">INSTALLATION CONTROL</p>
+            <h1 id="editorTitle">作品編輯模式</h1>
+          </div>
+          <button class="editor-close" id="editorClose" type="button" aria-label="關閉編輯模式">×</button>
+        </header>
+
+        <div class="editor-body">
+          <section class="editor-section">
+            <label class="field-label" for="startingCount">N 的起始數值</label>
+            <input
+              id="startingCount"
+              name="startingCount"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="留白＝每次新設定隨機 600–800"
+            />
+            <p class="field-help">手動輸入後，網站會從你設定的數字開始累積。</p>
+          </section>
+
+          <section class="editor-section">
+            <label class="field-label" for="videoFiles">替換廣告影片</label>
+            <label class="file-picker" for="videoFiles">
+              <span class="file-picker-title">選擇一支或多支影片</span>
+              <span class="file-picker-subtitle" id="filePickerSubtitle">未選擇時會保留目前影片</span>
+            </label>
+            <input
+              class="visually-hidden"
+              id="videoFiles"
+              name="videoFiles"
+              type="file"
+              accept="video/mp4,video/webm,.mp4,.webm"
+              multiple
+            />
+            <p class="field-help">建議使用 H.264 MP4；每個檔案需小於 95 MB，才能直接 push 到 GitHub。</p>
+          </section>
+
+          <section class="repo-section">
+            <div>
+              <h2>連接本機 Repository</h2>
+              <p>選擇 GitHub Desktop 裡真正含有 <code>.git</code> 與 <code>index.html</code> 的 AnotherChance 資料夾。</p>
+            </div>
+            <button class="secondary-button" id="chooseRepoButton" type="button">選擇資料夾</button>
+          </section>
+
+          <output class="editor-status" id="editorStatus" role="status" aria-live="polite">
+            尚未連接資料夾
+          </output>
+        </div>
+
+        <footer class="editor-actions">
+          <button class="text-button" id="editorCancel" type="button">取消</button>
+          <button class="save-button" id="saveButton" type="submit">儲存到 Repository</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <div class="save-toast" id="saveToast" role="status" aria-live="polite" hidden>
+      <strong>已儲存</strong>
+      <span>現在可以到 GitHub Desktop commit 並 push。</span>
+    </div>
+  </body>
+</html>
