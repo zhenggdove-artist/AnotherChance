@@ -2,7 +2,10 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#050505" />
     <meta
       name="description"
@@ -20,8 +23,6 @@
         <video
           id="adVideo"
           class="ad-video"
-          autoplay
-          muted
           playsinline
           preload="auto"
           disablepictureinpicture
@@ -38,9 +39,9 @@
             aria-label="觀看三十秒後關閉這則廣告"
             aria-disabled="true"
             disabled
+            hidden
           >
             <span class="skip-x" aria-hidden="true">×</span>
-            <span class="skip-state" id="skipState">尚不可關閉</span>
           </button>
 
           <div class="timer-panel" aria-live="polite">
@@ -60,16 +61,13 @@
               <span class="progress-fill" id="progressFill"></span>
             </div>
           </div>
-
-          <button class="sound-button" id="soundButton" type="button" aria-pressed="false">
-            <span class="sound-dot" aria-hidden="true"></span>
-            <span id="soundLabel">聲音：關</span>
-          </button>
         </header>
 
-        <button class="start-prompt" id="startPrompt" type="button" hidden>
-          <span>點擊開始觀看</span>
-          <small>影片開始後才會累積觀看時間</small>
+        <button class="start-prompt" id="startPrompt" type="button" aria-label="點一下螢幕開始有聲播放">
+          <span class="start-prompt-card">
+            <strong>點一下螢幕開始</strong>
+            <small>聲音將自動開啟</small>
+          </span>
         </button>
 
         <div class="playback-error" id="playbackError" role="alert" hidden>

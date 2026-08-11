@@ -14,12 +14,9 @@
   const elements = {
     video: document.querySelector("#adVideo"),
     skipButton: document.querySelector("#skipButton"),
-    skipState: document.querySelector("#skipState"),
     timerValue: document.querySelector("#timerValue"),
     progressTrack: document.querySelector("#progressTrack"),
     progressFill: document.querySelector("#progressFill"),
-    soundButton: document.querySelector("#soundButton"),
-    soundLabel: document.querySelector("#soundLabel"),
     startPrompt: document.querySelector("#startPrompt"),
     playbackError: document.querySelector("#playbackError"),
     fadeCurtain: document.querySelector("#fadeCurtain"),
@@ -44,9 +41,10 @@
   let selectedFiles = [];
   let currentVideoIndex = 0;
   let watchedSeconds = 0;
-  let lastFrameTime = performance.now();
+  let lastVideoTime = 0;
   let skipAvailable = false;
   let isTransitioning = false;
+  let experienceActivated = false;
   let repoHandle = null;
   let resumeAfterEditor = false;
   let toastTimer = null;
@@ -107,7 +105,14 @@
   }
 
   async function tryPlay() {
+    if (!experienceActivated) {
+      elements.startPrompt.hidden = false;
+      return false;
+    }
+
     try {
+      elements.video.muted = false;
+      elements.video.volume = 1;
       await elements.video.play();
       elements.startPrompt.hidden = true;
       return true;
@@ -115,6 +120,13 @@
       elements.startPrompt.hidden = false;
       return false;
     }
+  }
+
+  async function activateExperience() {
+    experienceActivated = true;
+    elements.video.muted = false;
+    elements.video.volume = 1;
+    await tryPlay();
   }
 
   function advanceVideo() {
@@ -144,31 +156,38 @@
     if (remaining <= 0 && !skipAvailable) {
       skipAvailable = true;
       elements.skipButton.disabled = false;
+      elements.skipButton.hidden = false;
       elements.skipButton.setAttribute("aria-disabled", "false");
       elements.skipButton.setAttribute("aria-label", "關閉這則廣告並繼續下一則");
       elements.skipButton.classList.add("is-ready");
-      elements.skipState.textContent = "可關閉廣告";
     }
   }
 
   function resetWatchTimer() {
     watchedSeconds = 0;
-    lastFrameTime = performance.now();
+    lastVideoTime = Number.isFinite(elements.video.currentTime) ? elements.video.currentTime : 0;
     skipAvailable = false;
     elements.skipButton.disabled = true;
+    elements.skipButton.hidden = true;
     elements.skipButton.setAttribute("aria-disabled", "true");
     elements.skipButton.setAttribute("aria-label", "觀看三十秒後關閉這則廣告");
     elements.skipButton.classList.remove("is-ready");
-    elements.skipState.textContent = "尚不可關閉";
     renderTimer();
   }
 
-  function tick(now) {
-    const delta = Math.min(0.25, Math.max(0, (now - lastFrameTime) / 1000));
-    lastFrameTime = now;
+  function tick() {
+    const currentVideoTime = Number.isFinite(elements.video.currentTime) ? elements.video.currentTime : 0;
+    const playedDelta = currentVideoTime - lastVideoTime;
+    lastVideoTime = currentVideoTime;
 
-    if (!elements.video.paused && !elements.video.ended && !document.hidden && !skipAvailable) {
-      watchedSeconds += delta;
+    if (
+      !elements.video.paused
+      && !elements.video.ended
+      && !document.hidden
+      && !skipAvailable
+      && playedDelta > 0
+    ) {
+      watchedSeconds += playedDelta;
       renderTimer();
     }
 
@@ -182,6 +201,7 @@
 
     isTransitioning = true;
     elements.skipButton.disabled = true;
+    elements.skipButton.hidden = true;
     elements.skipButton.classList.remove("is-ready");
     accumulatedCount += 1;
     storeCount();
@@ -198,13 +218,6 @@
     await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
     elements.fadeCurtain.style.transition = "opacity 900ms cubic-bezier(0.55, 0, 1, 0.45)";
     isTransitioning = false;
-  }
-
-  function toggleSound() {
-    elements.video.muted = !elements.video.muted;
-    elements.soundButton.setAttribute("aria-pressed", String(!elements.video.muted));
-    elements.soundLabel.textContent = elements.video.muted ? "聲音：關" : "聲音：開";
-    if (elements.video.paused) tryPlay();
   }
 
   function setEditorStatus(message, state = "neutral") {
@@ -410,8 +423,7 @@
   }
 
   elements.skipButton.addEventListener("click", handleSkip);
-  elements.soundButton.addEventListener("click", toggleSound);
-  elements.startPrompt.addEventListener("click", tryPlay);
+  elements.startPrompt.addEventListener("click", activateExperience);
   elements.editorClose.addEventListener("click", closeEditor);
   elements.editorCancel.addEventListener("click", closeEditor);
   elements.chooseRepoButton.addEventListener("click", chooseRepository);
@@ -439,11 +451,31 @@
   });
 
   document.addEventListener("visibilitychange", () => {
-    lastFrameTime = performance.now();
+    lastVideoTime = Number.isFinite(elements.video.currentTime) ? elements.video.currentTime : 0;
   });
+
+  document.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener("selectstart", (event) => {
+    const insideEditor = event.target instanceof Element && event.target.closest(".editor");
+    if (!insideEditor) event.preventDefault();
+  });
+
+  document.addEventListener("gesturestart", (event) => {
+    event.preventDefault();
+  }, { passive: false });
+
+  let lastTouchEnd = 0;
+  document.addEventListener("touchend", (event) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 350) event.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
 
   renderTicker();
   renderTimer();
-  loadVideo(0, { preservePlayback: false }).then(tryPlay);
+  loadVideo(0, { preservePlayback: false });
   window.requestAnimationFrame(tick);
 })();
