@@ -216,8 +216,8 @@ button {
   align-items: start;
   gap: clamp(12px, 2.4vw, 34px);
   width: 100%;
-  min-height: 118px;
-  padding: var(--safe-top) clamp(16px, 3.4vw, 52px) 22px;
+  min-height: 112px;
+  padding: calc(var(--safe-top) + 14px) clamp(16px, 3.4vw, 52px) 22px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0));
 }
 
@@ -229,18 +229,13 @@ button {
 .timer-meta {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 9px;
+  justify-content: center;
+  margin: 0;
   color: var(--white);
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   text-shadow: 0 1px 8px #000;
-}
-
-.timer-label {
-  font-size: clamp(12px, 1.1vw, 15px);
 }
 
 .timer-value {
@@ -252,13 +247,16 @@ button {
 }
 
 .progress-track {
-  position: relative;
-  height: 11px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 8px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 999px;
+  border: 0;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65), 0 4px 18px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
 }
 
 .progress-fill {
@@ -880,7 +878,8 @@ button {
   .watch-hud {
     grid-template-columns: 54px 1fr 54px;
     gap: 10px;
-    min-height: 108px;
+    min-height: 104px;
+    padding-top: calc(var(--safe-top) + 13px);
     padding-right: 12px;
     padding-left: 12px;
   }
@@ -889,20 +888,12 @@ button {
     font-size: 36px;
   }
 
-  .timer-meta {
-    margin-bottom: 6px;
-  }
-
-  .timer-label {
-    font-size: 10px;
-  }
-
   .timer-value {
     font-size: 22px;
   }
 
   .progress-track {
-    height: 9px;
+    height: 8px;
   }
 
   .ticker-copy {
