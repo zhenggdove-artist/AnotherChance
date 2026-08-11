@@ -1,9 +1,17 @@
 @font-face {
-  font-family: "Noto Serif TC Local";
+  font-family: "Noto Serif TC Interface";
+  src: url("assets/fonts/NotoSerifTC-Interface.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Noto Serif TC Full";
   src: url("assets/fonts/NotoSerifTC-VariableFont_wght.ttf") format("truetype");
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
@@ -11,7 +19,7 @@
   src: url("assets/fonts/saint.otf") format("opentype");
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
 }
 
 :root {
@@ -25,12 +33,16 @@
   --danger: #ff453a;
   --safe-top: max(18px, env(safe-area-inset-top));
   --safe-bottom: max(14px, env(safe-area-inset-bottom));
-  --site-font: "Noto Serif TC Local", "Noto Serif TC", "Microsoft JhengHei", serif;
+  --site-font: "Noto Serif TC Interface", "Noto Serif TC Full", "Noto Serif TC", "Microsoft JhengHei", serif;
   font-family: var(--site-font);
 }
 
 html[data-language="en"] {
-  --site-font: "Saint Local", "Noto Serif TC Local", "Times New Roman", serif;
+  --site-font: "Saint Local", "Noto Serif TC Interface", "Noto Serif TC Full", "Times New Roman", serif;
+}
+
+html.font-loading body {
+  visibility: hidden;
 }
 
 * {

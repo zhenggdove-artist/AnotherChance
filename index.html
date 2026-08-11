@@ -12,9 +12,48 @@
       content="Miracle—Another Chance：觀看廣告，為祂累積再次降臨的機會。"
     />
     <title>Miracle — Another Chance</title>
-    <link rel="stylesheet" href="./styles.css?v=20260812-i18n" />
+    <script>
+      (() => {
+        let language = "zh";
+        try {
+          language = localStorage.getItem("miracle-another-chance:language") === "en" ? "en" : "zh";
+        } catch {
+          language = "zh";
+        }
+
+        document.documentElement.lang = language === "en" ? "en" : "zh-Hant";
+        document.documentElement.dataset.language = language;
+        document.documentElement.classList.add("font-loading");
+
+        const preload = document.createElement("link");
+        preload.rel = "preload";
+        preload.as = "font";
+        preload.crossOrigin = "anonymous";
+        if (language === "en") {
+          preload.href = "./assets/fonts/saint.otf";
+          preload.type = "font/otf";
+        } else {
+          preload.href = "./assets/fonts/NotoSerifTC-Interface.woff2";
+          preload.type = "font/woff2";
+        }
+        document.head.appendChild(preload);
+      })();
+    </script>
+    <link rel="stylesheet" href="./styles.css?v=20260812-font-ready" />
+    <script>
+      (() => {
+        const family = document.documentElement.dataset.language === "en"
+          ? "Saint Local"
+          : "Noto Serif TC Interface";
+        const reveal = () => document.documentElement.classList.remove("font-loading");
+        Promise.race([
+          document.fonts.load(`16px "${family}"`),
+          new Promise((resolve) => window.setTimeout(resolve, 10000))
+        ]).finally(reveal);
+      })();
+    </script>
     <script src="./site-config.js" defer></script>
-    <script src="./script.js?v=20260812-i18n" defer></script>
+    <script src="./script.js?v=20260812-font-ready" defer></script>
   </head>
   <body>
     <main class="experience" id="experience">
@@ -185,7 +224,7 @@
           <section class="editor-section database-note">
             <span data-i18n="databaseEnabled">共同資料庫已啟用</span>
             <strong data-i18n="databaseShared">N 由所有參與者共同累積</strong>
-            <p data-i18n="databaseInitial">初始值為 121；此處不再使用隨機或手動假數字。</p>
+            <p data-i18n="databaseInitial">N 直接等於榜單觀看次數總和；不使用額外起始值。</p>
           </section>
 
           <section class="editor-section effect-controls">

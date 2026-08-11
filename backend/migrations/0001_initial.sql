@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS global_stats (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT OR IGNORE INTO global_stats (id, total_views) VALUES (1, 121);
+INSERT OR IGNORE INTO global_stats (id, total_views) VALUES (1, 0);
 
 CREATE TABLE IF NOT EXISTS participants (
   device_id TEXT PRIMARY KEY,
