@@ -1,11 +1,11 @@
 window.MIRACLE_CONFIG = {
-  "revision": "2026-08-11T20:03:02.856Z",
+  "revision": "2026-08-14T16:51:56.641Z",
   "apiBaseUrl": "https://miracle-another-chance-api.zhenggdove-artist.workers.dev",
   "videoFiles": [
     "assets/ads/ad-01.mp4"
   ],
   "skipDelaySeconds": 30,
-  "uiTheme": "chrome-angel",
+  "uiTheme": "green-rain",
   "effectType": "stars",
   "effectIntensity": 3,
   "tickerTextZh": "目前已累積觀看廣告{count}次，感謝您的參與，您的奉獻使祂距離復活更近了!",
