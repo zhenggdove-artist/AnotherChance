@@ -5,6 +5,7 @@ window.MIRACLE_CONFIG = {
     "assets/ads/ad-01.mp4"
   ],
   "skipDelaySeconds": 30,
+  "uiTheme": "chrome-angel",
   "effectType": "stars",
   "effectIntensity": 3,
   "tickerTextZh": "目前已累積觀看廣告{count}次，感謝您的參與，您的奉獻使祂距離復活更近了!",

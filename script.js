@@ -6,6 +6,7 @@
     apiBaseUrl: "https://miracle-another-chance-api.zhenggdove-artist.workers.dev",
     videoFiles: ["assets/ads/ad-01.mp4"],
     skipDelaySeconds: 30,
+    uiTheme: "chrome-angel",
     effectType: "hearts",
     effectIntensity: 2,
     tickerTextZh: "目前已累積觀看廣告{count}次，感謝您的參與，您的貢獻讓祂距離復活又跨進了一大步",
@@ -13,6 +14,14 @@
   };
 
   const MAX_GITHUB_FILE_SIZE = 95 * 1024 * 1024;
+  const UI_THEMES = new Set(["chrome-angel", "bubble-os", "empty-pool", "dream-shrine", "green-rain"]);
+  const THEME_COLORS = {
+    "chrome-angel": "#b9f7ff",
+    "bubble-os": "#c7ff2f",
+    "empty-pool": "#9deaff",
+    "dream-shrine": "#d9c3ff",
+    "green-rain": "#00ff66"
+  };
   const config = { ...DEFAULT_CONFIG, ...(window.MIRACLE_CONFIG || {}) };
 
   const LANGUAGE_STORAGE_KEY = "miracle-another-chance:language";
@@ -44,6 +53,18 @@
       databaseEnabled: "共同資料庫已啟用",
       databaseShared: "N 由所有參與者共同累積",
       databaseInitial: "N 直接等於榜單觀看次數總和；不使用額外起始值。",
+      themeEditorTitle: "介面風格",
+      themeEditorHelp: "點選後會立即預覽；儲存後才會寫入網站設定。",
+      themeChromeName: "鍍鉻天使",
+      themeChromeDescription: "Y2K 銀色、冰藍與透明果凍",
+      themeBubbleName: "泡泡作業系統",
+      themeBubbleDescription: "Y2K 酸性萊姆、桃紅與圓潤視窗",
+      themePoolName: "空泳池",
+      themePoolDescription: "夢核天空、水紋與無人的午後",
+      themeShrineName: "夢境禮拜堂",
+      themeShrineDescription: "夢核薰衣草、霧光與記憶殘影",
+      themeMatrixName: "綠雨終端",
+      themeMatrixDescription: "駭客任務黑綠終端與數位雨",
       tickerEditorTitle: "跑馬燈文字",
       tickerChineseLabel: "中文內容",
       tickerEnglishLabel: "英文內容",
@@ -130,6 +151,18 @@
       databaseEnabled: "SHARED DATABASE ENABLED",
       databaseShared: "N IS ACCUMULATED BY ALL PARTICIPANTS",
       databaseInitial: "N equals the sum of all views on the board. No extra starting value is used.",
+      themeEditorTitle: "INTERFACE STYLE",
+      themeEditorHelp: "Tap a style for a live preview. Save to write it into the site settings.",
+      themeChromeName: "CHROME ANGEL",
+      themeChromeDescription: "Y2K silver, ice blue and translucent jelly",
+      themeBubbleName: "BUBBLE OS",
+      themeBubbleDescription: "Y2K acid lime, hot pink and round windows",
+      themePoolName: "EMPTY POOL",
+      themePoolDescription: "Dreamcore sky, ripples and a vacant afternoon",
+      themeShrineName: "DREAM SHRINE",
+      themeShrineDescription: "Dreamcore lavender, fog glow and memory trails",
+      themeMatrixName: "GREEN RAIN",
+      themeMatrixDescription: "Matrix black-green terminal and digital rain",
       tickerEditorTitle: "TICKER TEXT",
       tickerChineseLabel: "CHINESE TEXT",
       tickerEnglishLabel: "ENGLISH TEXT",
@@ -213,6 +246,18 @@
     return Number(value).toLocaleString(currentLanguage === "en" ? "en-US" : "zh-TW");
   }
 
+  function normalizeTheme(value) {
+    return UI_THEMES.has(value) ? value : DEFAULT_CONFIG.uiTheme;
+  }
+
+  function applyUiTheme(value) {
+    const theme = normalizeTheme(value);
+    document.documentElement.dataset.uiTheme = theme;
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute("content", THEME_COLORS[theme]);
+    return theme;
+  }
+
   const elements = {
     video: document.querySelector("#adVideo"),
     skipButton: document.querySelector("#skipButton"),
@@ -246,6 +291,7 @@
     editorCancel: document.querySelector("#editorCancel"),
     tickerTextZh: document.querySelector("#tickerTextZh"),
     tickerTextEn: document.querySelector("#tickerTextEn"),
+    themeInputs: Array.from(document.querySelectorAll('input[name="uiTheme"]')),
     effectType: document.querySelector("#effectType"),
     effectIntensity: document.querySelector("#effectIntensity"),
     effectIntensityValue: document.querySelector("#effectIntensityValue"),
@@ -870,6 +916,11 @@
     if (elements.editorDialog.open || elements.leaderboardDialog.open) return;
     resumeAfterEditor = !elements.video.paused;
     elements.video.pause();
+    const activeTheme = normalizeTheme(activeConfig.uiTheme);
+    elements.themeInputs.forEach((input) => {
+      input.checked = input.value === activeTheme;
+    });
+    applyUiTheme(activeTheme);
     elements.effectType.value = EFFECT_PROFILES[activeConfig.effectType] ? activeConfig.effectType : "hearts";
     elements.effectIntensity.value = String(Math.min(3, Math.max(1, Number(activeConfig.effectIntensity) || 2)));
     elements.tickerTextZh.value = String(activeConfig.tickerTextZh || DEFAULT_CONFIG.tickerTextZh);
@@ -886,6 +937,7 @@
     if (!elements.editorDialog.open) return;
     elements.editorDialog.close();
     document.body.classList.remove("editor-open");
+    applyUiTheme(activeConfig.uiTheme);
     if (resumeAfterEditor) tryPlay();
   }
 
@@ -945,6 +997,7 @@
 
   function applySavedSettings(nextConfig, files) {
     activeConfig = { ...activeConfig, ...nextConfig };
+    applyUiTheme(activeConfig.uiTheme);
     renderTicker({ restart: true });
     void syncSharedState({ announce: true });
     resetWatchTimer();
@@ -968,6 +1021,9 @@
   async function saveEditorChanges(event) {
     event.preventDefault();
 
+    const selectedTheme = normalizeTheme(
+      elements.themeInputs.find((input) => input.checked)?.value
+    );
     const selectedEffectType = EFFECT_PROFILES[elements.effectType.value] ? elements.effectType.value : "hearts";
     const selectedEffectIntensity = Math.min(3, Math.max(1, Number(elements.effectIntensity.value) || 2));
     const tickerTextZh = elements.tickerTextZh.value.trim();
@@ -1021,6 +1077,7 @@
         apiBaseUrl: activeConfig.apiBaseUrl || DEFAULT_CONFIG.apiBaseUrl,
         videoFiles: nextVideoFiles,
         skipDelaySeconds: 30,
+        uiTheme: selectedTheme,
         effectType: selectedEffectType,
         effectIntensity: selectedEffectIntensity,
         tickerTextZh,
@@ -1090,6 +1147,11 @@
   elements.chooseRepoButton.addEventListener("click", chooseRepository);
   elements.videoFiles.addEventListener("change", handleSelectedFiles);
   elements.effectIntensity.addEventListener("input", renderIntensityLabel);
+  elements.themeInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) applyUiTheme(input.value);
+    });
+  });
   elements.editorForm.addEventListener("submit", saveEditorChanges);
 
   elements.tickerTrack.addEventListener("animationend", (event) => {
@@ -1149,6 +1211,28 @@
     lastTouchEnd = now;
   }, { passive: false });
 
+  window.render_game_to_text = () => JSON.stringify({
+    coordinateSystem: "DOM viewport; origin top-left; x right; y down",
+    mode: elements.editorDialog.open
+      ? "editor"
+      : (elements.leaderboardDialog.open ? "leaderboard" : (experienceActivated ? "playing" : "start")),
+    uiTheme: document.documentElement.dataset.uiTheme,
+    language: currentLanguage,
+    videoIndex: currentVideoIndex,
+    watchedSeconds: Number(watchedSeconds.toFixed(2)),
+    skipAvailable,
+    totalViews: accumulatedCount,
+    tickerRunning: elements.tickerTrack.classList.contains("is-running")
+  });
+
+  window.advanceTime = (milliseconds) => {
+    const seconds = Math.max(0, Number(milliseconds) || 0) / 1000;
+    const delay = Math.max(1, Number(activeConfig.skipDelaySeconds) || 30);
+    watchedSeconds = Math.min(delay, watchedSeconds + seconds);
+    renderTimer();
+  };
+
+  applyUiTheme(activeConfig.uiTheme);
   applyLanguage(currentLanguage, { persist: false, restartTickerNow: true });
   loadVideo(0, { preservePlayback: false });
   void syncSharedState();

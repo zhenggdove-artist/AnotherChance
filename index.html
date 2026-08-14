@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-ui-theme="chrome-angel">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -36,6 +36,7 @@
     <meta name="twitter:image:alt" content="OneMoreMiracle — 我們一起讓神再一次復活!" />
 
     <title>OneMoreMiracle</title>
+    <script src="./site-config.js"></script>
     <script>
       (() => {
         let language = "zh";
@@ -47,6 +48,11 @@
 
         document.documentElement.lang = language === "en" ? "en" : "zh-Hant";
         document.documentElement.dataset.language = language;
+        const availableThemes = new Set(["chrome-angel", "bubble-os", "empty-pool", "dream-shrine", "green-rain"]);
+        const configuredTheme = window.MIRACLE_CONFIG?.uiTheme;
+        document.documentElement.dataset.uiTheme = availableThemes.has(configuredTheme)
+          ? configuredTheme
+          : "chrome-angel";
         document.documentElement.classList.add("font-loading");
 
         const preload = document.createElement("link");
@@ -63,7 +69,7 @@
         document.head.appendChild(preload);
       })();
     </script>
-    <link rel="stylesheet" href="./styles.css?v=20260812-ticker-editor" />
+    <link rel="stylesheet" href="./styles.css?v=20260815-ui-themes" />
     <script>
       (() => {
         const family = document.documentElement.dataset.language === "en"
@@ -76,8 +82,7 @@
         ]).finally(reveal);
       })();
     </script>
-    <script src="./site-config.js" defer></script>
-    <script src="./script.js?v=20260812-ticker-editor" defer></script>
+    <script src="./script.js?v=20260815-ui-themes" defer></script>
   </head>
   <body>
     <main class="experience" id="experience">
@@ -249,6 +254,63 @@
             <span data-i18n="databaseEnabled">共同資料庫已啟用</span>
             <strong data-i18n="databaseShared">N 由所有參與者共同累積</strong>
             <p data-i18n="databaseInitial">N 直接等於榜單觀看次數總和；不使用額外起始值。</p>
+          </section>
+
+          <section class="editor-section theme-controls">
+            <div class="theme-heading">
+              <div>
+                <h2 data-i18n="themeEditorTitle">介面風格</h2>
+                <p data-i18n="themeEditorHelp">點選後會立即預覽；儲存後才會寫入網站設定。</p>
+              </div>
+              <span class="theme-count" aria-hidden="true">05 UI</span>
+            </div>
+
+            <div class="theme-grid" role="radiogroup" aria-label="介面風格" data-i18n-aria="themeEditorTitle">
+              <label class="theme-option" data-theme-preview="chrome-angel">
+                <input type="radio" name="uiTheme" value="chrome-angel" />
+                <span class="theme-swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="theme-copy">
+                  <strong data-i18n="themeChromeName">鍍鉻天使</strong>
+                  <small data-i18n="themeChromeDescription">Y2K 銀色、冰藍與透明果凍</small>
+                </span>
+              </label>
+
+              <label class="theme-option" data-theme-preview="bubble-os">
+                <input type="radio" name="uiTheme" value="bubble-os" />
+                <span class="theme-swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="theme-copy">
+                  <strong data-i18n="themeBubbleName">泡泡作業系統</strong>
+                  <small data-i18n="themeBubbleDescription">Y2K 酸性萊姆、桃紅與圓潤視窗</small>
+                </span>
+              </label>
+
+              <label class="theme-option" data-theme-preview="empty-pool">
+                <input type="radio" name="uiTheme" value="empty-pool" />
+                <span class="theme-swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="theme-copy">
+                  <strong data-i18n="themePoolName">空泳池</strong>
+                  <small data-i18n="themePoolDescription">夢核天空、水紋與無人的午後</small>
+                </span>
+              </label>
+
+              <label class="theme-option" data-theme-preview="dream-shrine">
+                <input type="radio" name="uiTheme" value="dream-shrine" />
+                <span class="theme-swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="theme-copy">
+                  <strong data-i18n="themeShrineName">夢境禮拜堂</strong>
+                  <small data-i18n="themeShrineDescription">夢核薰衣草、霧光與記憶殘影</small>
+                </span>
+              </label>
+
+              <label class="theme-option" data-theme-preview="green-rain">
+                <input type="radio" name="uiTheme" value="green-rain" />
+                <span class="theme-swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="theme-copy">
+                  <strong data-i18n="themeMatrixName">綠雨終端</strong>
+                  <small data-i18n="themeMatrixDescription">駭客任務黑綠終端與數位雨</small>
+                </span>
+              </label>
+            </div>
           </section>
 
           <section class="editor-section ticker-controls">
